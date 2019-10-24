@@ -1,10 +1,10 @@
 #include "ConsoleController.h"
+#include "Graphics.h"
 
-int main() {
-	wcout << L"Hello" << endl;
+int main(int argc, char* argv[]) {
+	Console_Initalize();
 
-
-	system("pause");
+	InitializeOpenGL(argc, argv);
 
 	return 0;
 }
