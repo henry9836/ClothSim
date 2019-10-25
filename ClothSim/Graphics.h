@@ -9,8 +9,10 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include "3D.h"
 #include "ConsoleController.h"
 #include "ScreenInfo.h"
 #include "Input.h"
+#include "Camera.h"
 
 void InitializeOpenGL(int argc, char* argv[]);

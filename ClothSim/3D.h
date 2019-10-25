@@ -706,14 +706,14 @@ public:
 		// Estimate normals for interior nodes using central difference.
 		float invTwoDX = 1.0f / (2.0f * 1.0f);
 		float invTwoDZ = 1.0f / (2.0f * 1.0f);
-		for (UINT i = 2; i < this->imageSize.y; ++i)
+		for (UINT i = 2; i < this->size.y; ++i)
 		{
-			for (UINT j = 2; j < this->imageSize.x; ++j)
+			for (UINT j = 2; j < this->size.x; ++j)
 			{
-				float t = this->heightInfo[(i - 1) * this->imageSize.x + j];
-				float b = this->heightInfo[(i + 1) * this->imageSize.x + j];
-				float l = this->heightInfo[i * this->imageSize.x + j - 1];
-				float r = this->heightInfo[i * this->imageSize.x + j + 1];
+				float t = this->heightInfo[(i - 1) * this->size.x + j];
+				float b = this->heightInfo[(i + 1) * this->size.x + j];
+				float l = this->heightInfo[i * this->size.x + j - 1];
+				float r = this->heightInfo[i * this->size.x + j + 1];
 
 				glm::vec3 tanZ(0.0f, (t - b) * invTwoDZ, 1.0f);
 				glm::vec3 tanX(1.0f, (r - l) * invTwoDX, 0.0f);
@@ -722,19 +722,19 @@ public:
 				N = glm::cross(tanZ, tanX);
 				glm::normalize(N);
 
-				this->TerrianNormals[(i - 2) * this->imageSize.x + (j - 2)] = N;
+				this->ClothNormals[(i - 2) * this->size.x + (j - 2)] = N;
 			}
 		}
 	}
 
 	float width()const
 	{
-		return (this->imageSize.x - 1) * 1;
+		return (this->size.x - 1) * 1;
 	}
 
 	float depth()const
 	{
-		return (this->imageSize.y - 1) * 1;
+		return (this->size.y - 1) * 1;
 	}
 
 	float getHeight(float x, float z)const
@@ -755,10 +755,10 @@ public:
 				//  | /|
 				//  |/ |
 				// C*--*D
-				float A = heightInfo[row * this->imageSize.x + col];
-				float B = heightInfo[row * this->imageSize.x + col + 1];
-				float C = heightInfo[(row + 1) * this->imageSize.x + col];
-				float D = heightInfo[(row + 1) * this->imageSize.x + col + 1];
+				float A = heightInfo[row * this->size.x + col];
+				float B = heightInfo[row * this->size.x + col + 1];
+				float C = heightInfo[(row + 1) * this->size.x + col];
+				float D = heightInfo[(row + 1) * this->size.x + col + 1];
 
 				// Where we are relative to the cell.
 				float s = c - (float)col;
@@ -792,74 +792,19 @@ public:
 
 		this->name = _name;
 		this->camera = _cam;
+		this->size = _size;
 
+		int totalSize = _size.x * _size.y;
 
-		//Create Vertcies and Indices
+		//Resize vectors to cloth size
 
-
-		int totalSize = 0;
-
-		//Get Info From Map
-		ifstream heightMap;
-		heightMap.open(_pathToHeightMap.c_str(), std::ios_base::binary);
-		if (heightMap.fail())
-		{
-			Console_OutputLog(L"Could not load height map", LOGWARN);
-			return;
-		}
-		else {
-			//Get Image Size
-
-			int w, h, c, f = 0;
-
-			unsigned char* image = SOIL_load_image
-			(
-				_pathToHeightMap.c_str(),
-				&w, &h, 0,
-				SOIL_LOAD_L
-			);
-
-			if (image == nullptr) {
-				Console_OutputLog(L"Could not load height map with SOIL defaulting to 512x512 image size", LOGWARN);
-				w = 513;
-				h = 513;
-			}
-
-			totalSize = w * h;
-
-			/*
-			char c;
-
-
-			while (heightMap >> c) {
-				totalSize++;
-			}
-			*/
-
-			//Resize vectors to image size
-
-			this->rawData.resize(totalSize);
-			this->heightInfo.resize(totalSize * 2);
-
-			this->imageSize.x = sqrt(this->rawData.size());
-			this->imageSize.y = this->imageSize.x;
-
-			heightMap.close();
-
-			heightMap.open(_pathToHeightMap.c_str(), std::ios_base::binary);
-
-			//Put map info into vector
-
-			heightMap.read((char*)&this->rawData[0], (std::streamsize)this->rawData.size());
-		}
-
-		heightMap.close();
+		this->rawData.resize(totalSize);
+		this->heightInfo.resize(totalSize * 2);
 
 
 		for (UINT i = 0; i < rawData.size(); ++i)
 		{
-			//heightInfo[i] = (float)rawData[i] * mInfo.HeightScale + mInfo.HeightOffset;
-			this->heightInfo[i] = (float)this->rawData[i];
+			this->heightInfo[i] = 0;
 		}
 
 		//Create Vertices From HeightInfo
@@ -868,48 +813,48 @@ public:
 		int col = 0;
 
 
-		float halfWidth = (this->imageSize.x - 1) * 1.0f * 0.5f;
-		float halfDepth = (this->imageSize.y - 1) * 1.0f * 0.5f;
+		float halfWidth = (this->size.x - 1) * 1.0f * 0.5f;
+		float halfDepth = (this->size.y - 1) * 1.0f * 0.5f;
 
-		float du = 1.0f / (this->imageSize.x - 1);
-		float dv = 1.0f / (this->imageSize.y - 1);
+		float du = 1.0f / (this->size.x - 1);
+		float dv = 1.0f / (this->size.y - 1);
 
-		TerrianNormals.resize(totalSize + 1);
+		ClothNormals.resize(totalSize + 1);
 		int inter = 0;
 		findNormal();
 
 		//Create collision vectors
-		collisionInfo.resize(this->imageSize.y);
+		collisionInfo.resize(this->size.y);
 		for (size_t i = 0; i < collisionInfo.size(); i++)
 		{
-			collisionInfo.at(i).resize(this->imageSize.x);
+			collisionInfo.at(i).resize(this->size.x);
 		}
 
-		for (UINT i = 0; i < this->imageSize.y - 1; ++i)
+		for (UINT i = 0; i < this->size.y - 1; ++i)
 		{
 			float z = halfDepth - i * 1.0f;
-			for (UINT j = 0; j < this->imageSize.x; ++j)
+			for (UINT j = 0; j < this->size.x; ++j)
 			{
 
 				float x = -halfWidth + j * 1.0f;
-				float y = heightInfo[i * this->imageSize.x + j];
+				float y = heightInfo[i * this->size.x + j];
 
 
 				//Positions
-				this->TerrianVertices.push_back(x);
-				this->TerrianVertices.push_back(y);
-				this->TerrianVertices.push_back(z);
+				this->ClothVertices.push_back(x);
+				this->ClothVertices.push_back(y);
+				this->ClothVertices.push_back(z);
 
 				//Normal
-				this->TerrianVertices.push_back(TerrianNormals[inter].x);
-				this->TerrianVertices.push_back(TerrianNormals[inter].y);
-				this->TerrianVertices.push_back(TerrianNormals[inter].z);
+				this->ClothVertices.push_back(ClothNormals[inter].x);
+				this->ClothVertices.push_back(ClothNormals[inter].y);
+				this->ClothVertices.push_back(ClothNormals[inter].z);
 
 				inter++;
 
 				//Stretch texture over grid.
-				this->TerrianVertices.push_back(j * du);
-				this->TerrianVertices.push_back(i * dv);
+				this->ClothVertices.push_back(j * du);
+				this->ClothVertices.push_back(i * dv);
 
 			}
 		}
@@ -918,18 +863,18 @@ public:
 
 		// Iterate over each quad and compute indices.
 
-		this->TerrianIndices.resize(totalSize * 6);
+		this->ClothIndices.resize(totalSize * 6);
 
 		int k = 0;
-		for (unsigned int i = 0; i < this->imageSize.y - 1; ++i) {
-			for (unsigned int j = 0; j < this->imageSize.x - 1; ++j) {
-				this->TerrianIndices[k] = i * this->imageSize.x + j;
-				this->TerrianIndices[k + 1] = i * this->imageSize.x + j + 1;
-				this->TerrianIndices[k + 2] = (i + 1) * this->imageSize.x + j;
+		for (unsigned int i = 0; i < this->size.y - 1; ++i) {
+			for (unsigned int j = 0; j < this->size.x - 1; ++j) {
+				this->ClothIndices[k] = i * this->size.x + j;
+				this->ClothIndices[k + 1] = i * this->size.x + j + 1;
+				this->ClothIndices[k + 2] = (i + 1) * this->size.x + j;
 
-				this->TerrianIndices[k + 3] = (i + 1) * this->imageSize.x + j;
-				this->TerrianIndices[k + 4] = i * this->imageSize.x + j + 1;
-				this->TerrianIndices[k + 5] = (i + 1) * this->imageSize.x + j + 1;
+				this->ClothIndices[k + 3] = (i + 1) * this->size.x + j;
+				this->ClothIndices[k + 4] = i * this->size.x + j + 1;
+				this->ClothIndices[k + 5] = (i + 1) * this->size.x + j + 1;
 
 				k += 6; // next quad
 			}
@@ -943,7 +888,7 @@ public:
 
 		int width, height;
 
-		unsigned char* image = SOIL_load_image("Resources/Textures/map.png", &width, &height, 0, SOIL_LOAD_RGBA);
+		unsigned char* image = SOIL_load_image("Resources/Textures/cloth.png", &width, &height, 0, SOIL_LOAD_RGBA);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 
 		glEnable(GL_BLEND);
@@ -962,11 +907,11 @@ public:
 
 		glGenBuffers(1, &this->VBO);
 		glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-		glBufferData(GL_ARRAY_BUFFER, this->TerrianVertices.size() * sizeof(GLfloat), &this->TerrianVertices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, this->ClothVertices.size() * sizeof(GLfloat), &this->ClothVertices[0], GL_STATIC_DRAW);
 
 		glGenBuffers(1, &this->EBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->TerrianIndices.size() * sizeof(GLuint), &this->TerrianIndices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->ClothIndices.size() * sizeof(GLuint), &this->ClothIndices[0], GL_STATIC_DRAW);
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
@@ -985,7 +930,7 @@ public:
 		this->program = ShaderLoader::CreateProgram("Resources/Shaders/3DObject_Diffuse.vs", "Resources/Shaders/3DObject_BlinnPhong.fs");
 		//this->program = ShaderLoader::CreateProgram("Resources/Shaders/3DObject_Diffuse.vs", "Resources/Shaders/3DObject_DiffuseColor.fs");
 
-		Console_OutputLog(to_wstring("Terrian: " + _name + " Initalised"), LOGINFO);
+		Console_OutputLog(to_wstring("Cloth: " + _name + " Initalised"), LOGINFO);
 
 
 	}
@@ -1030,7 +975,7 @@ public:
 
 
 
-		glDrawElements(GL_TRIANGLES, this->TerrianIndices.size(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, this->ClothIndices.size(), GL_UNSIGNED_INT, 0);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
 

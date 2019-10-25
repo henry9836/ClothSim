@@ -1,14 +1,43 @@
 #include "Graphics.h"
 
 ScreenInfo screen;
+Cloth* cloth;
+Camera* camera;
 
 float deltaTime = 0;
 float currentTime = 0;
 float pasttime = 0;
 
+glm::vec3 backColor = glm::vec3(0, 0, 0);
+
+bool goingup = true;
+
+void FlashRed(glm::vec3* inColor, float deltaTime) {
+	float increase = 0.005f * deltaTime;
+	if (goingup) {
+		if (inColor->x >= 1) {
+			goingup = !goingup;
+		}
+		else {
+			inColor->x += increase;
+		}
+	}
+	else {
+		if (inColor->x <= 0) {
+			goingup = !goingup;
+		}
+		else {
+			inColor->x -= increase;
+		}
+	}
+}
+
 void Render() {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+	glClearColor(backColor.x, backColor.y, backColor.z, 1.0);
+
+	cloth->Render(camera);
 
 	glutSwapBuffers();
 }
@@ -18,6 +47,11 @@ void Update() {
 	currentTime = static_cast<float>(glutGet(GLUT_ELAPSED_TIME));
 	deltaTime = ((currentTime - pasttime) * 0.001f);
 	pasttime = currentTime;
+
+	camera->Tick(screen, deltaTime);
+	FlashRed(&backColor, deltaTime);
+
+	Render();
 }
 
 void InitializeOpenGL(int argc, char* argv[]) {
@@ -50,6 +84,13 @@ void InitializeOpenGL(int argc, char* argv[]) {
 			// CREATE, INITALISE AND ASSIGN GAME OBJECTS //
 			===============================================
 	*/
+
+	camera = new Camera();
+	camera->initializeCamera();
+
+	cloth = new Cloth();
+	cloth->Initalise(camera, glm::vec2(100,100), "Cloth Physics Object");
+
 
 	//Start The Game
 
