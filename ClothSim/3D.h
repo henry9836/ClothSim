@@ -804,7 +804,7 @@ public:
 
 		for (UINT i = 0; i < rawData.size(); ++i)
 		{
-			this->heightInfo[i] = 0;
+			this->heightInfo[i] = 50;
 		}
 
 		//Create Vertices From HeightInfo

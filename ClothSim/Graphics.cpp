@@ -2,6 +2,7 @@
 
 ScreenInfo screen;
 Cloth* cloth;
+Terrain* terrian;
 Camera* camera;
 Model* tank;
 
@@ -46,6 +47,8 @@ void Render() {
 
 	cloth->Render(camera);
 
+	terrian->Render(camera);
+
 	tank->Render();
 
 	text.Render();
@@ -79,6 +82,7 @@ void Update() {
 		camera->camPos.x += speed * deltaTime;
 	}
 
+	terrian->position.y -= 1.0f * deltaTime;
 
 	Render();
 }
@@ -126,12 +130,21 @@ void InitializeOpenGL(int argc, char* argv[]) {
 
 	/*
 			===========
+			// TERRIAN //
+			===========
+	*/
+
+	terrian = new Terrain();
+	terrian->Initalise(camera, "mountain.raw", "Terrian");
+
+	/*
+			===========
 			// CLOTH //
 			===========
 	*/
 
 	cloth = new Cloth();
-	cloth->Initalise(camera, glm::vec2(100,100), "Cloth");
+	cloth->Initalise(camera, glm::vec2(1000,1000), "Cloth");
 
 	/*
 			==========
