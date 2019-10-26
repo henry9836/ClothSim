@@ -3,6 +3,13 @@
 ScreenInfo screen;
 Cloth* cloth;
 Camera* camera;
+Model* tank;
+
+Input input;
+
+//Text
+TextLabel text;
+
 
 float deltaTime = 0;
 float currentTime = 0;
@@ -13,7 +20,7 @@ glm::vec3 backColor = glm::vec3(0, 0, 0);
 bool goingup = true;
 
 void FlashRed(glm::vec3* inColor, float deltaTime) {
-	float increase = 0.005f * deltaTime;
+	float increase = deltaTime;
 	if (goingup) {
 		if (inColor->x >= 1) {
 			goingup = !goingup;
@@ -39,6 +46,10 @@ void Render() {
 
 	cloth->Render(camera);
 
+	tank->Render();
+
+	text.Render();
+
 	glutSwapBuffers();
 }
 
@@ -47,9 +58,27 @@ void Update() {
 	currentTime = static_cast<float>(glutGet(GLUT_ELAPSED_TIME));
 	deltaTime = ((currentTime - pasttime) * 0.001f);
 	pasttime = currentTime;
+	
+	//Object Ticks
 
 	camera->Tick(screen, deltaTime);
 	FlashRed(&backColor, deltaTime);
+
+	//Input
+	float speed = 5;
+	if (input.CheckKeyDown(87)) {
+		camera->camPos.z += speed * deltaTime;
+	}
+	if (input.CheckKeyDown(83)) {
+		camera->camPos.z -= speed * deltaTime;
+	}
+	if (input.CheckKeyDown(65)) {
+		camera->camPos.x -= speed * deltaTime;
+	}
+	if (input.CheckKeyDown(68)) {
+		camera->camPos.x += speed * deltaTime;
+	}
+
 
 	Render();
 }
@@ -85,12 +114,42 @@ void InitializeOpenGL(int argc, char* argv[]) {
 			===============================================
 	*/
 
+
+	/*
+			============
+			// CAMERA //
+			============
+	*/
 	camera = new Camera();
 	camera->initializeCamera();
+	camera->SwitchMode(camera->CONTROL, glm::vec3(0,0,0), glm::vec3(0,0,1), glm::vec3(0,0,1), 1, 1);
+
+	/*
+			===========
+			// CLOTH //
+			===========
+	*/
 
 	cloth = new Cloth();
-	cloth->Initalise(camera, glm::vec2(100,100), "Cloth Physics Object");
+	cloth->Initalise(camera, glm::vec2(100,100), "Cloth");
 
+	/*
+			==========
+			// TANK //
+			==========
+	*/
+	//mainModels.push_back(new Model("Resources/Models/Tank/Tank.obj", &mCam, "Tank", rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f, 0.5f, 0.5f), "Resources/Shaders/3DObject_Diffuse.vs", "Resources/Shaders/3DObject_BlinnPhong.fs"));
+	tank = new Model("Resources/Models/Tank/Tank.obj", camera, "Tank", 0.0f, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f, 0.5f, 0.5f), "Resources/Shaders/3DObject_Diffuse.vs", "Resources/Shaders/3DObject_BlinnPhong.fs");
+	                  //std::string path,              Camera* ,string,float ,glm::vec3 ,                  glm::vec3 ,                  glm::vec3 ,                   std::string ,                           std::string 
+
+	/*
+			==========
+			// TEXT //
+			==========
+	*/
+
+	text = TextLabel(screen, "This is a test", "Resources/Fonts/TerminusTTF-4.47.0.ttf", glm::vec2(screen.SCR_WIDTH * -0.48,screen.SCR_HEIGHT * 0.43));
+	text.SetScale(static_cast<GLfloat>(1.0));
 
 	//Start The Game
 

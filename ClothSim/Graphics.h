@@ -14,5 +14,6 @@
 #include "ScreenInfo.h"
 #include "Input.h"
 #include "Camera.h"
+#include "TextLabel.h"
 
 void InitializeOpenGL(int argc, char* argv[]);
