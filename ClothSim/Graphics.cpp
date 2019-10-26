@@ -81,6 +81,12 @@ void Update() {
 	if (input.CheckKeyDown(68)) {
 		camera->camPos.x += speed * deltaTime;
 	}
+	if (input.CheckKeyDown(88)) {
+		cloth->wireframe = true;
+	}
+	if (input.CheckKeyDown(90)) {
+		cloth->wireframe = false;
+	}
 
 	terrian->position.y -= 1.0f * deltaTime;
 

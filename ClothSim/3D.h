@@ -956,26 +956,29 @@ public:
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, this->texture);
 
-		glUniform1i(glGetUniformLocation(this->program, "texture_diffuse1"), 0);
+		if (!wireframe) {
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, this->texture);
+
+			glUniform1i(glGetUniformLocation(this->program, "texture_diffuse1"), 0);
+		}
 
 
 		//PATCH END
 		GLint mvpLoc = glGetUniformLocation(program, "proj_calc");
 		glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(projCalc));
-		//GLint mvpLoc2 = glGetUniformLocation(program, "vp");
-		//glUniformMatrix4fv(mvpLoc2, 1, GL_FALSE, glm::value_ptr(projCalc));
 		GLint modelPass = glGetUniformLocation(program, "model");
 		glUniformMatrix4fv(modelPass, 1, GL_FALSE, glm::value_ptr(model));
 		GLint camPosPass = glGetUniformLocation(program, "camPos");
 		glUniformMatrix3fv(camPosPass, 1, GL_FALSE, glm::value_ptr(camPos));
-
-
-
-
-		glDrawElements(GL_TRIANGLES, this->ClothIndices.size(), GL_UNSIGNED_INT, 0);
+		if (!wireframe) {
+			glDrawElements(GL_TRIANGLES, this->ClothIndices.size(), GL_UNSIGNED_INT, 0);
+		}
+		else {
+			glDrawElements(GL_LINES, this->ClothIndices.size(), GL_UNSIGNED_INT, 0);
+		}
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
 
@@ -987,7 +990,7 @@ public:
 
 	vector<vector<float>> collisionInfo;
 	glm::vec3 position = glm::vec3(0.0f, -150.0f, 0.0f);
-
+	bool wireframe = true;
 private:
 	std::string name = "Untitled Cloth";
 	glm::mat4 model;
@@ -1014,5 +1017,6 @@ private:
 	GLuint program = NULL;
 
 	float rotationAngle = 0;
+	
 
 };
