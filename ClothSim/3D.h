@@ -697,3 +697,322 @@ public:
 	float rotationAngle = 90;
 	GLuint program;
 };
+
+class Cloth {
+
+public:
+
+	void findNormal() {
+		// Estimate normals for interior nodes using central difference.
+		float invTwoDX = 1.0f / (2.0f * 1.0f);
+		float invTwoDZ = 1.0f / (2.0f * 1.0f);
+		for (UINT i = 2; i < this->size.y; ++i)
+		{
+			for (UINT j = 2; j < this->size.x; ++j)
+			{
+				float t = this->heightInfo[(i - 1) * this->size.x + j];
+				float b = this->heightInfo[(i + 1) * this->size.x + j];
+				float l = this->heightInfo[i * this->size.x + j - 1];
+				float r = this->heightInfo[i * this->size.x + j + 1];
+
+				glm::vec3 tanZ(0.0f, (t - b) * invTwoDZ, 1.0f);
+				glm::vec3 tanX(1.0f, (r - l) * invTwoDX, 0.0f);
+
+				glm::vec3 N;
+				N = glm::cross(tanZ, tanX);
+				glm::normalize(N);
+
+				this->ClothNormals[(i - 2) * this->size.x + (j - 2)] = N;
+			}
+		}
+	}
+
+	float width()const
+	{
+		return (this->size.x - 1) * 1;
+	}
+
+	float depth()const
+	{
+		return (this->size.y - 1) * 1;
+	}
+
+	float getHeight(float x, float z)const
+	{
+		try {
+			// Transform from terrain local space to "cell" space.
+			float c = (x + 0.5f * width()) / 1;
+			float d = (z - 0.5f * depth()) / -1;
+
+			// Get the row and column we are in.
+			int row = (int)floorf(d);
+			int col = (int)floorf(c);
+
+			if (row >= 0 && col >= 0) {
+
+				// Grab the heights of the cell we are in.
+				// A*--*B
+				//  | /|
+				//  |/ |
+				// C*--*D
+				float A = heightInfo[row * this->size.x + col];
+				float B = heightInfo[row * this->size.x + col + 1];
+				float C = heightInfo[(row + 1) * this->size.x + col];
+				float D = heightInfo[(row + 1) * this->size.x + col + 1];
+
+				// Where we are relative to the cell.
+				float s = c - (float)col;
+				float t = d - (float)row;
+
+				// If upper triangle ABC.
+				if (s + t <= 1.0f)
+				{
+					float uy = B - A;
+					float vy = C - A;
+					return A + s * uy + t * vy;
+				}
+				else // lower triangle DCB.
+				{
+					float uy = C - D;
+					float vy = B - D;
+					return D + (1.0f - s) * uy + (1.0f - t) * vy;
+				}
+			}
+			else {
+				return 0;
+			}
+		}
+		catch (...) {
+			return 0;
+		}
+	}
+
+	void Initalise(Camera* _cam, glm::vec2 _size, std::string _name) {
+		Console_OutputLog(to_wstring("Initalising Cloth: " + _name), LOGINFO);
+
+		this->name = _name;
+		this->camera = _cam;
+		this->size = _size;
+
+		int totalSize = _size.x * _size.y;
+
+		//Resize vectors to cloth size
+
+		this->rawData.resize(totalSize);
+		this->heightInfo.resize(totalSize * 2);
+
+
+		for (UINT i = 0; i < rawData.size(); ++i)
+		{
+			this->heightInfo[i] = 0;
+		}
+
+		//Create Vertices From HeightInfo
+
+		int row = 0;
+		int col = 0;
+
+
+		float halfWidth = (this->size.x - 1) * 1.0f * 0.5f;
+		float halfDepth = (this->size.y - 1) * 1.0f * 0.5f;
+
+		float du = 1.0f / (this->size.x - 1);
+		float dv = 1.0f / (this->size.y - 1);
+
+		ClothNormals.resize(totalSize + 1);
+		int inter = 0;
+		findNormal();
+
+		//Create collision vectors
+		collisionInfo.resize(this->size.y);
+		for (size_t i = 0; i < collisionInfo.size(); i++)
+		{
+			collisionInfo.at(i).resize(this->size.x);
+		}
+
+		for (UINT i = 0; i < this->size.y - 1; ++i)
+		{
+			float z = halfDepth - i * 1.0f;
+			for (UINT j = 0; j < this->size.x; ++j)
+			{
+
+				float x = -halfWidth + j * 1.0f;
+				float y = heightInfo[i * this->size.x + j];
+
+
+				//Positions
+				this->ClothVertices.push_back(x);
+				this->ClothVertices.push_back(y);
+				this->ClothVertices.push_back(z);
+
+				//Normal
+				this->ClothVertices.push_back(ClothNormals[inter].x);
+				this->ClothVertices.push_back(ClothNormals[inter].y);
+				this->ClothVertices.push_back(ClothNormals[inter].z);
+
+				inter++;
+
+				//Stretch texture over grid.
+				this->ClothVertices.push_back(j * du);
+				this->ClothVertices.push_back(i * dv);
+
+			}
+		}
+
+		//Create Indices
+
+		// Iterate over each quad and compute indices.
+
+		this->ClothIndices.resize(totalSize * 6);
+
+		int k = 0;
+		for (unsigned int i = 0; i < this->size.y - 1; ++i) {
+			for (unsigned int j = 0; j < this->size.x - 1; ++j) {
+				this->ClothIndices[k] = i * this->size.x + j;
+				this->ClothIndices[k + 1] = i * this->size.x + j + 1;
+				this->ClothIndices[k + 2] = (i + 1) * this->size.x + j;
+
+				this->ClothIndices[k + 3] = (i + 1) * this->size.x + j;
+				this->ClothIndices[k + 4] = i * this->size.x + j + 1;
+				this->ClothIndices[k + 5] = (i + 1) * this->size.x + j + 1;
+
+				k += 6; // next quad
+			}
+		}
+
+
+		//Bind and Generate Info
+
+		glGenTextures(1, &this->texture);
+		glBindTexture(GL_TEXTURE_2D, this->texture);
+
+		int width, height;
+
+		unsigned char* image = SOIL_load_image("Resources/Textures/cloth.png", &width, &height, 0, SOIL_LOAD_RGBA);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		SOIL_free_image_data(image);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDisable(GL_BLEND);
+
+		glGenVertexArrays(1, &this->VAO);
+		glBindVertexArray(this->VAO);
+
+		glGenBuffers(1, &this->VBO);
+		glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+		glBufferData(GL_ARRAY_BUFFER, this->ClothVertices.size() * sizeof(GLfloat), &this->ClothVertices[0], GL_STATIC_DRAW);
+
+		glGenBuffers(1, &this->EBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->ClothIndices.size() * sizeof(GLuint), &this->ClothIndices[0], GL_STATIC_DRAW);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
+
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(1);
+
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(2); // REMEMBER UR INDICES
+
+		//Create program
+
+		//this->program = ShaderLoader::CreateProgram("Resources/Shaders/3DObjectColor.vs", "Resources/Shaders/3DObjectColor.fs");
+		//this->program = ShaderLoader::CreateProgram("Resources/Shaders/Basic.vs", "Resources/Shaders/Basic.fs"); //Renders 2D
+		//this->program = ShaderLoader::CreateProgram("Resources/Shaders/Basic3D.vs", "Resources/Shaders/Basic3D.fs"); //Render
+		this->program = ShaderLoader::CreateProgram("Resources/Shaders/3DObject_Diffuse.vs", "Resources/Shaders/3DObject_BlinnPhong.fs");
+		//this->program = ShaderLoader::CreateProgram("Resources/Shaders/3DObject_Diffuse.vs", "Resources/Shaders/3DObject_DiffuseColor.fs");
+
+		Console_OutputLog(to_wstring("Cloth: " + _name + " Initalised"), LOGINFO);
+
+
+	}
+
+	void Render(Camera* camera) {
+
+		glUseProgram(this->program);
+		glBindVertexArray(this->VAO);
+
+		glm::mat4 model;
+		glm::mat4 translationMatrix = glm::translate(glm::mat4(), position);
+		glm::mat4 rotationZ = glm::rotate(glm::mat4(), glm::radians(this->rotationAngle), this->rotationAxisZ);
+		glm::mat4 scaleMatrix = glm::scale(glm::mat4(), scale);
+		model = translationMatrix * rotationZ * scaleMatrix;
+		glm::mat4 mvp = camera->proj * camera->view * model;
+		glm::vec3 camPos = camera->camPos;
+
+		//POSITION AND SCALE
+		glm::mat4 projCalc = camera->proj * camera->view * model;
+
+		//PATCH
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, this->texture);
+
+		glUniform1i(glGetUniformLocation(this->program, "texture_diffuse1"), 0);
+
+
+		//PATCH END
+		GLint mvpLoc = glGetUniformLocation(program, "proj_calc");
+		glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(projCalc));
+		//GLint mvpLoc2 = glGetUniformLocation(program, "vp");
+		//glUniformMatrix4fv(mvpLoc2, 1, GL_FALSE, glm::value_ptr(projCalc));
+		GLint modelPass = glGetUniformLocation(program, "model");
+		glUniformMatrix4fv(modelPass, 1, GL_FALSE, glm::value_ptr(model));
+		GLint camPosPass = glGetUniformLocation(program, "camPos");
+		glUniformMatrix3fv(camPosPass, 1, GL_FALSE, glm::value_ptr(camPos));
+
+
+
+
+		glDrawElements(GL_TRIANGLES, this->ClothIndices.size(), GL_UNSIGNED_INT, 0);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+
+		//Clearing the vertex array
+		glBindVertexArray(0);
+		glUseProgram(0);
+
+	}
+
+	vector<vector<float>> collisionInfo;
+	glm::vec3 position = glm::vec3(0.0f, -150.0f, 0.0f);
+
+private:
+	std::string name = "Untitled Cloth";
+	glm::mat4 model;
+	glm::mat4 projCalc;
+	glm::mat4 rotationZ;
+
+	glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
+	glm::vec2 size = glm::vec2(1.0f, 1.0f);
+	glm::vec3 rotationAxisZ = glm::vec3(1.0f, 0.0f, 0.0f);
+
+	vector<unsigned char> rawData;
+	vector<float> heightInfo;
+	vector<GLfloat> ClothVertices;
+	vector<GLuint>  ClothIndices;
+	vector<glm::vec3>  ClothNormals;
+
+
+	Camera* camera = nullptr;
+	GLuint VAO = NULL;
+	GLuint VBO = NULL;
+	GLuint EBO = NULL;
+	GLuint texture = NULL;
+	GLuint image = NULL;
+	GLuint program = NULL;
+
+	float rotationAngle = 0;
+
+};
