@@ -88,6 +88,7 @@ void Update() {
 		cloth->wireframe = false;
 	}
 
+	//terrian sinks
 	terrian->position.y -= 1.0f * deltaTime;
 
 	Render();
@@ -157,10 +158,8 @@ void InitializeOpenGL(int argc, char* argv[]) {
 			// TANK //
 			==========
 	*/
-	//mainModels.push_back(new Model("Resources/Models/Tank/Tank.obj", &mCam, "Tank", rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f, 0.5f, 0.5f), "Resources/Shaders/3DObject_Diffuse.vs", "Resources/Shaders/3DObject_BlinnPhong.fs"));
 	tank = new Model("Resources/Models/Tank/Tank.obj", camera, "Tank", 0.0f, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f, 0.5f, 0.5f), "Resources/Shaders/3DObject_Diffuse.vs", "Resources/Shaders/3DObject_BlinnPhong.fs");
-	                  //std::string path,              Camera* ,string,float ,glm::vec3 ,                  glm::vec3 ,                  glm::vec3 ,                   std::string ,                           std::string 
-
+	
 	/*
 			==========
 			// TEXT //
@@ -187,5 +186,5 @@ void InitializeOpenGL(int argc, char* argv[]) {
 	glutMainLoop();
 
 	return;
-
 }
+
