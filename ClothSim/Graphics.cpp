@@ -69,22 +69,22 @@ void Update() {
 
 	//Input
 	float speed = 5;
-	if (input.CheckKeyDown(87)) {
+	if (input.CheckKeyDown(87)) { //W
 		camera->camPos.z += speed * deltaTime;
 	}
-	if (input.CheckKeyDown(83)) {
+	if (input.CheckKeyDown(83)) { //S
 		camera->camPos.z -= speed * deltaTime;
 	}
-	if (input.CheckKeyDown(65)) {
+	if (input.CheckKeyDown(65)) { //A
 		camera->camPos.x -= speed * deltaTime;
 	}
-	if (input.CheckKeyDown(68)) {
+	if (input.CheckKeyDown(68)) { //D
 		camera->camPos.x += speed * deltaTime;
 	}
-	if (input.CheckKeyDown(88)) {
+	if (input.CheckKeyDown(88)) { //X
 		cloth->wireframe = true;
 	}
-	if (input.CheckKeyDown(90)) {
+	if (input.CheckKeyDown(90)) { //Z
 		cloth->wireframe = false;
 	}
 

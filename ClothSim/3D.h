@@ -698,6 +698,49 @@ public:
 	GLuint program;
 };
 
+struct ClothNode {
+public:
+	glm::vec3 position = glm::vec3(0, 0, 0);
+	glm::vec3 velocity = glm::vec3(0, 0, 0);
+	glm::vec3 acceleration = glm::vec3(0, 0, 0);
+	
+	float mass = 1.0f;
+	float grav = 9.8;
+	float damping = 0.1f;
+	
+	bool staticNode = false;
+
+	void Update() {
+		Console_OutputLog(L"NODE UPDATED!", LOGINFO);
+
+		glm::vec3 gravityForce(0, mass * grav, 0);
+		this->ApplyForce(gravityForce);
+		acceleration -= velocity * damping / mass;
+	}
+	void ApplyForce(glm::vec3 force) {
+		acceleration += force / mass;
+	}
+};
+
+struct ClothConstraint {
+public:
+	const float stiffness = 0.8;
+	const float restingDistance = 5;
+	ClothNode* p1;
+	ClothNode* p2;
+
+	void Update() {
+		glm::vec3 delta = p2->position - p1->position;
+		glm::vec3 deltaLength = sqrt(delta * delta);
+		glm::vec3 difference = (deltaLength - restingDistance) / deltaLength;
+		float im1 = 1 / p1->mass;
+		float im2 = 1 / p2->mass;
+
+		p1->position -= delta * (im1 / (im1 + im2)) * stiffness * difference;
+		p2->position += delta * (im2 / (im1 + im2)) * stiffness * difference;
+	}
+};
+
 class Cloth {
 
 public:
