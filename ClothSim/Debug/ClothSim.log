@@ -1,3 +1,2 @@
 ﻿  Graphics.cpp
-K:\Projects\ClothSim\ClothSim\3D.h(749,67): warning C4244: '=': conversion from 'glm::tvec3<float,0>::length_type' to 'float', possible loss of data
   ClothSim.vcxproj -> K:\Projects\ClothSim\Debug\ClothSim.exe

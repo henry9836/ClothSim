@@ -146,39 +146,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="3D.cpp" />
-    <ClCompile Include="AI.cpp" />
-    <ClCompile Include="Audio.cpp" />
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="GamerManager.cpp" />
     <ClCompile Include="Graphics.cpp" />
-    <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ObjectManager.cpp" />
-    <ClCompile Include="ShaderLoader.cpp" />
-    <ClCompile Include="Sprite.cpp" />
-    <ClCompile Include="TextLabel.cpp" />
-    <ClCompile Include="TextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="3D.h" />
-    <ClInclude Include="AI.h" />
-    <ClInclude Include="Audio.h" />
-    <ClInclude Include="Camera.h" />
     <ClInclude Include="ConsoleController.h" />
     <ClInclude Include="ft2build.h" />
-    <ClInclude Include="GamerManager.h" />
     <ClInclude Include="Graphics.h" />
-    <ClInclude Include="Input.h" />
-    <ClInclude Include="Model.h" />
-    <ClInclude Include="ModelMesh.h" />
-    <ClInclude Include="ObjectManager.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="ScreenInfo.h" />
-    <ClInclude Include="ShaderLoader.h" />
-    <ClInclude Include="Sprite.h" />
-    <ClInclude Include="TextLabel.h" />
-    <ClInclude Include="TextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ClothSim.rc" />
