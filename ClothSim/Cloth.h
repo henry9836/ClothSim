@@ -90,8 +90,8 @@ public:
 			}
 		}
 
-		Console_OutputLog(L"Connecting Cloth Nodes", LOGINFO);
 		//Connect nodes
+		Console_OutputLog(L"Connecting Cloth Nodes", LOGINFO);
 		for (size_t y = 0; y < size.y-1; y++)
 		{
 			for (size_t x = 0; x < size.x-1; x++)
@@ -115,6 +115,14 @@ public:
 				clothConstraints.push_back(new clothConstraint(clothNodes.at(y + 1).at(x), clothNodes.at(y).at(x + 1)));
 			}
 		}
+
+		//Static Nodes
+		Console_OutputLog(L"Setting Static Cloth Nodes", LOGINFO);
+		for (size_t i = 0; i < size.x; i++)
+		{
+			clothNodes.at(size.y-1).at(i)->staticNode = true;
+		}
+
 
 		Console_OutputLog(L"Created Cloth Object", LOGINFO);
 	}
