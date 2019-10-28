@@ -15,8 +15,7 @@ const glm::vec3 zVector = glm::vec3(0, 0, 0);
 
 struct clothNode {
 protected:
-	//const float damping = 0.01f;
-	const float damping = 0.1f;
+	const float damping = 0.01f;
 	const float phyStep = 0.25f;
 public:
 	bool staticNode = false;
@@ -62,12 +61,13 @@ public:
 	clothConstraint(clothNode* _p1, clothNode* _p2) {
 		p1 = _p1;
 		p2 = _p2;
-		stableDistance = glm::vec3(p2->position - p1->position).length();
+		stableDistance = glm::length(glm::vec3(p2->position - p1->position));
 	}
 
 	void Tick(float deltaTime) {
 		glm::vec3 direction = p2->position - p1->position; //get direction from p2 to p1
-		currDistance = direction.length(); //get the distance between the points
+		//currDistance = direction.length(); //get the distance between the points
+		currDistance = glm::length(direction); //get the distance between the points
 		glm::vec3 corrVec = (direction * (1 - stableDistance / currDistance)) * 0.5f; //find the vector to move the points towards each other if they are stretching
 		p1->moveBy(corrVec);
 		p2->moveBy(-corrVec);
