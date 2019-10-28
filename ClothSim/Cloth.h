@@ -92,7 +92,29 @@ public:
 
 		Console_OutputLog(L"Connecting Cloth Nodes", LOGINFO);
 		//Connect nodes
+		for (size_t y = 0; y < size.y-1; y++)
+		{
+			for (size_t x = 0; x < size.x-1; x++)
+			{
+				//A---B
+				//| / |
+				//C---D
 
+				//A-B
+				clothConstraints.push_back(new clothConstraint(clothNodes.at(y).at(x), clothNodes.at(y).at(x + 1)));
+				//B-C
+				clothConstraints.push_back(new clothConstraint(clothNodes.at(y).at(x + 1), clothNodes.at(y + 1).at(x)));
+				//C-A
+				clothConstraints.push_back(new clothConstraint(clothNodes.at(y + 1).at(x), clothNodes.at(y).at(x)));
+
+				//B-D
+				clothConstraints.push_back(new clothConstraint(clothNodes.at(y).at(x + 1), clothNodes.at(y + 1).at(x + 1)));
+				//D-C
+				clothConstraints.push_back(new clothConstraint(clothNodes.at(y + 1).at(x + 1), clothNodes.at(y + 1).at(x)));
+				//C-B
+				clothConstraints.push_back(new clothConstraint(clothNodes.at(y + 1).at(x), clothNodes.at(y).at(x + 1)));
+			}
+		}
 
 		Console_OutputLog(L"Created Cloth Object", LOGINFO);
 	}

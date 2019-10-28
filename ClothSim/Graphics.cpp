@@ -10,7 +10,7 @@ void Render() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	
-	glTranslatef(-6.5, 6, -9.0f);
+	glTranslatef(-30, -10, -50.0f);
 	glRotatef(25, 0, 1, 0);
 
 	cloth->Render();
