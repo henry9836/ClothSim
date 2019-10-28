@@ -703,6 +703,7 @@ public:
 	glm::vec3 position = glm::vec3(0, 0, 0);
 	glm::vec3 velocity = glm::vec3(0, 0, 0);
 	glm::vec3 acceleration = glm::vec3(0, 0, 0);
+	glm::vec3 normal = glm::vec3(0, 0, 0);
 	
 	float mass = 1.0f;
 	float grav = 9.8f;
@@ -765,6 +766,23 @@ class Cloth {
 
 public:
 
+	glm::vec3 crossMultiply(glm::vec3 a, glm::vec3 b) {
+		glm::vec3 result = glm::vec3(0, 0, 0);
+
+		return result;
+	}
+
+	glm::vec3 findNodeTriangleNormal(ClothNode* n1, ClothNode* n2, ClothNode* n3) {
+		glm::vec3 result = glm::vec3(0,0,0);
+
+		glm::vec3 v1 = n2->position - n1->position;
+		glm::vec3 v2 = n3->position - n1->position;
+
+		result = crossMultiply(v1, v2);
+
+		return result;
+	}
+
 	void findNormal() {
 		// Estimate normals for interior nodes using central difference.
 		float invTwoDX = 1.0f / (2.0f * 1.0f);
@@ -788,6 +806,28 @@ public:
 				this->ClothNormals[(i - 2) * (unsigned int)this->size.x + (j - 2)] = N;
 			}
 		}
+
+		//Update Cloth Node Normals
+
+		for (size_t i = 0; i < this->size.y - 1; i++)
+		{
+			for (size_t j = 0; j < this->size.x - 1; j++)
+			{
+				clothNodes.at(i).at(j)->normal = glm::vec3(0, 0, 0);
+				clothNodes.at(i).at(j)->normal = findNodeTriangleNormal();
+
+				/*Vec3 normal = calcTriangleNormal(getParticle(x + 1, y), getParticle(x, y), getParticle(x, y + 1));
+				getParticle(x + 1, y)->addToNormal(normal);
+				getParticle(x, y)->addToNormal(normal);
+				getParticle(x, y + 1)->addToNormal(normal);
+
+				normal = calcTriangleNormal(getParticle(x + 1, y + 1), getParticle(x + 1, y), getParticle(x, y + 1));
+				getParticle(x + 1, y + 1)->addToNormal(normal);
+				getParticle(x + 1, y)->addToNormal(normal);
+				getParticle(x, y + 1)->addToNormal(normal);*/
+			}
+		}
+
 	}
 
 	float width()const
@@ -1050,64 +1090,90 @@ public:
 				//next section of verts
 				//k += 6;
 
-				ClothVertices.at(k) += 2;
+				ClothVertices.at(k) *= 2;
+				ClothVertices.at(k+1) *= 2;
+				ClothVertices.at(k+2) *= 2;
 
 				k += 6;
 			}
 		}
 
+		wcout << L"LP";
+
 	}
 
 	void Render(Camera* camera) {
 
-		glUseProgram(this->program);
-		glBindVertexArray(this->VAO);
+		//Find normals for nodes
 
-		glm::mat4 model;
-		glm::mat4 translationMatrix = glm::translate(glm::mat4(), position);
-		glm::mat4 rotationZ = glm::rotate(glm::mat4(), glm::radians(this->rotationAngle), this->rotationAxisZ);
-		glm::mat4 scaleMatrix = glm::scale(glm::mat4(), scale);
-		model = translationMatrix * rotationZ * scaleMatrix;
-		glm::mat4 mvp = camera->proj * camera->view * model;
-		glm::vec3 camPos = camera->camPos;
+		findNormal();
 
-		//POSITION AND SCALE
-		glm::mat4 projCalc = camera->proj * camera->view * model;
+		glBegin(GL_TRIANGLES);
+		
+		for (size_t i = 0; i < clothNodes.size(); i++)
+		{
+			glm::vec3(1.0, 1.0, 1.0);
+			glNormal3fv((GLfloat*) & (p1->getNormal().normalized()));
+			glVertex3fv((GLfloat*) & (p1->getPos()));
 
-		//PATCH
+			glNormal3fv((GLfloat*) & (p2->getNormal().normalized()));
+			glVertex3fv((GLfloat*) & (p2->getPos()));
 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-
-		if (!wireframe) {
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, this->texture);
-
-			glUniform1i(glGetUniformLocation(this->program, "texture_diffuse1"), 0);
+			glNormal3fv((GLfloat*) & (p3->getNormal().normalized()));
+			glVertex3fv((GLfloat*) & (p3->getPos()));
 		}
 
+		glEnd();
 
-		//PATCH END
-		GLint mvpLoc = glGetUniformLocation(program, "proj_calc");
-		glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(projCalc));
-		GLint modelPass = glGetUniformLocation(program, "model");
-		glUniformMatrix4fv(modelPass, 1, GL_FALSE, glm::value_ptr(model));
-		GLint camPosPass = glGetUniformLocation(program, "camPos");
-		glUniformMatrix3fv(camPosPass, 1, GL_FALSE, glm::value_ptr(camPos));
-		if (!wireframe) {
-			glDrawElements(GL_TRIANGLES, this->ClothIndices.size(), GL_UNSIGNED_INT, 0);
-		}
-		else {
-			glDrawElements(GL_LINES, this->ClothIndices.size(), GL_UNSIGNED_INT, 0);
-		}
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_BLEND);
 
-		//Clearing the vertex array
-		glBindVertexArray(0);
-		glUseProgram(0);
+		//glUseProgram(this->program);
+		//glBindVertexArray(this->VAO);
+
+		//glm::mat4 model;
+		//glm::mat4 translationMatrix = glm::translate(glm::mat4(), position);
+		//glm::mat4 rotationZ = glm::rotate(glm::mat4(), glm::radians(this->rotationAngle), this->rotationAxisZ);
+		//glm::mat4 scaleMatrix = glm::scale(glm::mat4(), scale);
+		//model = translationMatrix * rotationZ * scaleMatrix;
+		//glm::mat4 mvp = camera->proj * camera->view * model;
+		//glm::vec3 camPos = camera->camPos;
+
+		////POSITION AND SCALE
+		//glm::mat4 projCalc = camera->proj * camera->view * model;
+
+		////PATCH
+
+		//glEnable(GL_BLEND);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+		//if (!wireframe) {
+
+		//	glActiveTexture(GL_TEXTURE0);
+		//	glBindTexture(GL_TEXTURE_2D, this->texture);
+
+		//	glUniform1i(glGetUniformLocation(this->program, "texture_diffuse1"), 0);
+		//}
+
+
+		////PATCH END
+		//GLint mvpLoc = glGetUniformLocation(program, "proj_calc");
+		//glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(projCalc));
+		//GLint modelPass = glGetUniformLocation(program, "model");
+		//glUniformMatrix4fv(modelPass, 1, GL_FALSE, glm::value_ptr(model));
+		//GLint camPosPass = glGetUniformLocation(program, "camPos");
+		//glUniformMatrix3fv(camPosPass, 1, GL_FALSE, glm::value_ptr(camPos));
+		//if (!wireframe) {
+		//	glDrawElements(GL_TRIANGLES, this->ClothIndices.size(), GL_UNSIGNED_INT, 0);
+		//}
+		//else {
+		//	glDrawElements(GL_LINES, this->ClothIndices.size(), GL_UNSIGNED_INT, 0);
+		//}
+		//glDisable(GL_CULL_FACE);
+		//glDisable(GL_BLEND);
+
+		////Clearing the vertex array
+		//glBindVertexArray(0);
+		//glUseProgram(0);
 
 	}
 

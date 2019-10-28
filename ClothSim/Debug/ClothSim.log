@@ -5,4 +5,18 @@
   Sprite.cpp
   main.cpp
   Generating Code...
+<<<<<<< Updated upstream
   ClothSim.vcxproj -> F:\school shit\year 2\physics\cloth\ClothSim\Debug\ClothSim.exe
+=======
+K:\Projects\ClothSim\ClothSim\3D.h(948,60): warning C4244: '=': conversion from 'T' to '_Ty', possible loss of data
+K:\Projects\ClothSim\ClothSim\3D.h(948,60): warning C4244:         with
+K:\Projects\ClothSim\ClothSim\3D.h(948,60): warning C4244:         [
+K:\Projects\ClothSim\ClothSim\3D.h(948,60): warning C4244:             T=float
+K:\Projects\ClothSim\ClothSim\3D.h(948,60): warning C4244:         ]
+K:\Projects\ClothSim\ClothSim\3D.h(948,60): warning C4244:         and
+K:\Projects\ClothSim\ClothSim\3D.h(948,60): warning C4244:         [
+K:\Projects\ClothSim\ClothSim\3D.h(948,60): warning C4244:             _Ty=GLuint
+K:\Projects\ClothSim\ClothSim\3D.h(948,60): warning C4244:         ]
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  ClothSim.vcxproj -> K:\Projects\ClothSim\Debug\ClothSim.exe
+>>>>>>> Stashed changes
