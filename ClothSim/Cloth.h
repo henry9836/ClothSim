@@ -20,6 +20,7 @@ protected:
 public:
 	bool staticNode = false;
 	float mass = 10.0f;
+	glm::vec3 spawnPos = glm::vec3(0, 0, 0);
 	glm::vec3 position = glm::vec3(0, 0, 0);
 	glm::vec3 oldPosition = glm::vec3(0, 0, 0);
 	glm::vec3 acceleration = glm::vec3(0, 0, 0);
@@ -27,9 +28,17 @@ public:
 
 	clothNode();
 	clothNode(glm::vec3 pos) {
+		spawnPos = pos;
 		position = pos;
 		oldPosition = pos;
 	};
+
+	void Reset() {
+		position = spawnPos;
+		oldPosition = spawnPos;
+		acceleration = zVector;
+	}
+
 	void addForce(glm::vec3 force, float groundLevel)
 	{
 		//Check if on ground
@@ -247,6 +256,22 @@ public:
 
 
 		glEnd();
+	}
+
+	void Reset() {
+		for (size_t y = 0; y < size.y; y++)
+		{
+			for (size_t x = 0; x < size.x; x++)
+			{
+				clothNodes.at(y).at(x)->Reset();
+			}
+		}
+		//Static Nodes
+		Console_OutputLog(L"Setting Static Cloth Nodes", LOGINFO);
+		for (size_t i = 0; i < size.x; i++)
+		{
+			clothNodes.at(size.y - 1).at(i)->staticNode = true;
+		}
 	}
 
 	void Tick(float deltaTime) {

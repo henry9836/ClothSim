@@ -1,24 +1,34 @@
 ﻿  Graphics.cpp
-D:\Projects\ClothSim\ClothSim\Cloth.h(109,25): warning C4244:  'argument': conversion from 'T' to 'const unsigned int', possible loss of data
-D:\Projects\ClothSim\ClothSim\Cloth.h(109,25): warning C4244:         with
-D:\Projects\ClothSim\ClothSim\Cloth.h(109,25): warning C4244:         [
-D:\Projects\ClothSim\ClothSim\Cloth.h(109,25): warning C4244:             T=float
-D:\Projects\ClothSim\ClothSim\Cloth.h(109,25): warning C4244:         ]
+D:\Projects\ClothSim\ClothSim\Cloth.h(118,25): warning C4244:  'argument': conversion from 'T' to 'const unsigned int', possible loss of data
+D:\Projects\ClothSim\ClothSim\Cloth.h(118,25): warning C4244:         with
+D:\Projects\ClothSim\ClothSim\Cloth.h(118,25): warning C4244:         [
+D:\Projects\ClothSim\ClothSim\Cloth.h(118,25): warning C4244:             T=float
+D:\Projects\ClothSim\ClothSim\Cloth.h(118,25): warning C4244:         ]
+D:\Projects\ClothSim\ClothSim\Cloth.h(160,24): warning C4244:  'argument': conversion from 'T' to 'const unsigned int', possible loss of data
+D:\Projects\ClothSim\ClothSim\Cloth.h(160,24): warning C4244:         with
+D:\Projects\ClothSim\ClothSim\Cloth.h(160,24): warning C4244:         [
+D:\Projects\ClothSim\ClothSim\Cloth.h(160,24): warning C4244:             T=float
+D:\Projects\ClothSim\ClothSim\Cloth.h(160,24): warning C4244:         ]
   main.cpp
-D:\Projects\ClothSim\ClothSim\Cloth.h(151,24): warning C4244:  'argument': conversion from 'T' to 'const unsigned int', possible loss of data
-D:\Projects\ClothSim\ClothSim\Cloth.h(151,24): warning C4244:         with
-D:\Projects\ClothSim\ClothSim\Cloth.h(151,24): warning C4244:         [
-D:\Projects\ClothSim\ClothSim\Cloth.h(151,24): warning C4244:             T=float
-D:\Projects\ClothSim\ClothSim\Cloth.h(151,24): warning C4244:         ]
-D:\Projects\ClothSim\ClothSim\Cloth.h(109,25): warning C4244:  'argument': conversion from 'T' to 'const unsigned int', possible loss of data
-D:\Projects\ClothSim\ClothSim\Cloth.h(109,25): warning C4244:         with
-D:\Projects\ClothSim\ClothSim\Cloth.h(109,25): warning C4244:         [
-D:\Projects\ClothSim\ClothSim\Cloth.h(109,25): warning C4244:             T=float
-D:\Projects\ClothSim\ClothSim\Cloth.h(109,25): warning C4244:         ]
+D:\Projects\ClothSim\ClothSim\Cloth.h(273,25): warning C4244:  'argument': conversion from 'T' to 'const unsigned int', possible loss of data
+D:\Projects\ClothSim\ClothSim\Cloth.h(273,25): warning C4244:         with
+D:\Projects\ClothSim\ClothSim\Cloth.h(273,25): warning C4244:         [
+D:\Projects\ClothSim\ClothSim\Cloth.h(273,25): warning C4244:             T=float
+D:\Projects\ClothSim\ClothSim\Cloth.h(273,25): warning C4244:         ]
+D:\Projects\ClothSim\ClothSim\Cloth.h(118,25): warning C4244:  'argument': conversion from 'T' to 'const unsigned int', possible loss of data
+D:\Projects\ClothSim\ClothSim\Cloth.h(118,25): warning C4244:         with
+D:\Projects\ClothSim\ClothSim\Cloth.h(118,25): warning C4244:         [
+D:\Projects\ClothSim\ClothSim\Cloth.h(118,25): warning C4244:             T=float
+D:\Projects\ClothSim\ClothSim\Cloth.h(118,25): warning C4244:         ]
+D:\Projects\ClothSim\ClothSim\Cloth.h(160,24): warning C4244:  'argument': conversion from 'T' to 'const unsigned int', possible loss of data
+D:\Projects\ClothSim\ClothSim\Cloth.h(160,24): warning C4244:         with
+D:\Projects\ClothSim\ClothSim\Cloth.h(160,24): warning C4244:         [
+D:\Projects\ClothSim\ClothSim\Cloth.h(160,24): warning C4244:             T=float
+D:\Projects\ClothSim\ClothSim\Cloth.h(160,24): warning C4244:         ]
   Generating Code...
-D:\Projects\ClothSim\ClothSim\Cloth.h(151,24): warning C4244:  'argument': conversion from 'T' to 'const unsigned int', possible loss of data
-D:\Projects\ClothSim\ClothSim\Cloth.h(151,24): warning C4244:         with
-D:\Projects\ClothSim\ClothSim\Cloth.h(151,24): warning C4244:         [
-D:\Projects\ClothSim\ClothSim\Cloth.h(151,24): warning C4244:             T=float
-D:\Projects\ClothSim\ClothSim\Cloth.h(151,24): warning C4244:         ]
+D:\Projects\ClothSim\ClothSim\Cloth.h(273,25): warning C4244:  'argument': conversion from 'T' to 'const unsigned int', possible loss of data
+D:\Projects\ClothSim\ClothSim\Cloth.h(273,25): warning C4244:         with
+D:\Projects\ClothSim\ClothSim\Cloth.h(273,25): warning C4244:         [
+D:\Projects\ClothSim\ClothSim\Cloth.h(273,25): warning C4244:             T=float
+D:\Projects\ClothSim\ClothSim\Cloth.h(273,25): warning C4244:         ]
   ClothSim.vcxproj -> D:\Projects\ClothSim\Debug\ClothSim.exe

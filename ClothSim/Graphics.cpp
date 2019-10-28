@@ -55,6 +55,11 @@ void keyboardInput(unsigned char key, int x, int y) {
 	if (key == 103 || key == 71) { //g
 		gravity = !gravity;
 	}
+
+	if (key == 114 || key == 82) { //r
+		gravity = false;
+		cloth->Reset();
+	}
 }
 
 void Resize(int w, int h) {
