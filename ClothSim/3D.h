@@ -710,8 +710,20 @@ public:
 	
 	bool staticNode = false;
 
+	ClothNode() {
+
+	}
+
+	ClothNode(glm::vec3 pos) {
+		this->position = pos;
+	}
+
+	ClothNode(glm::vec3 pos, bool isStatic) {
+		this->position = pos;
+		staticNode = isStatic;
+	}
+
 	void Update() {
-		Console_OutputLog(L"NODE UPDATED!", LOGINFO);
 
 		glm::vec3 gravityForce(0, mass * grav, 0);
 		this->ApplyForce(gravityForce);
@@ -729,6 +741,11 @@ public:
 	ClothNode* p1;
 	ClothNode* p2;
 
+	ClothConstraint(ClothNode* _p1, ClothNode* _p2) {
+		p1 = _p1;
+		p2 = _p2;
+	}
+
 	void Update() {
 		glm::vec3 delta = p2->position - p1->position;
 		glm::vec3 deltaLength = sqrt(delta * delta);
@@ -738,6 +755,9 @@ public:
 
 		p1->position -= delta * (im1 / (im1 + im2)) * stiffness * difference;
 		p2->position += delta * (im2 / (im1 + im2)) * stiffness * difference;
+
+		p1->Update();
+		p2->Update();
 	}
 };
 
@@ -866,13 +886,17 @@ public:
 		int inter = 0;
 		findNormal();
 
-		//Create collision vectors
+		//size collision vectors
 		collisionInfo.resize(this->size.y);
 		for (size_t i = 0; i < collisionInfo.size(); i++)
 		{
 			collisionInfo.at(i).resize(this->size.x);
 		}
+		
+		//Resize node vector
+		clothNodes.resize(this->size.y);
 
+		//Create Verts
 		for (UINT i = 0; i < this->size.y - 1; ++i)
 		{
 			float z = halfDepth - i * 1.0f;
@@ -887,6 +911,9 @@ public:
 				this->ClothVertices.push_back(x);
 				this->ClothVertices.push_back(y);
 				this->ClothVertices.push_back(z);
+
+				//clothNode Position
+				this->clothNodes.at(i).push_back(new ClothNode(glm::vec3(x,y,z)));
 
 				//Normal
 				this->ClothVertices.push_back(ClothNormals[inter].x);
@@ -909,8 +936,9 @@ public:
 		this->ClothIndices.resize(totalSize * 6);
 
 		int k = 0;
-		for (unsigned int i = 0; i < this->size.y - 1; ++i) {
-			for (unsigned int j = 0; j < this->size.x - 1; ++j) {
+		for (unsigned int i = 0; i < this->size.y - 1; ++i) { //y
+			for (unsigned int j = 0; j < this->size.x - 1; ++j) { //x
+
 				this->ClothIndices[k] = i * this->size.x + j;
 				this->ClothIndices[k + 1] = i * this->size.x + j + 1;
 				this->ClothIndices[k + 2] = (i + 1) * this->size.x + j;
@@ -923,6 +951,32 @@ public:
 			}
 		}
 
+		//Create Constraints
+
+		for (size_t i = 0; i < this->size.y - 2; i++) //y
+		{
+			for (size_t j = 0; j < this->size.x - 2; j++) //x
+			{
+				//A---B
+				//| / |
+				//C---D
+
+				//A-B
+				this->clothConstraints.push_back(new ClothConstraint(clothNodes.at(i).at(j), clothNodes.at(i).at(j + 1)));
+				//B-C
+				this->clothConstraints.push_back(new ClothConstraint(clothNodes.at(i + 1).at(j), clothNodes.at(i).at(j + 1)));
+				//C-A
+				this->clothConstraints.push_back(new ClothConstraint(clothNodes.at(i).at(j), clothNodes.at(i + 1).at(j)));
+
+
+				//B-D
+				this->clothConstraints.push_back(new ClothConstraint(clothNodes.at(i).at(j + 1), clothNodes.at(i + 1).at(j + 1)));
+				//D-C
+				this->clothConstraints.push_back(new ClothConstraint(clothNodes.at(i + 1).at(j), clothNodes.at(i + 1).at(j + 1)));
+				//C-B
+				this->clothConstraints.push_back(new ClothConstraint(clothNodes.at(i + 1).at(j), clothNodes.at(i).at(j + 1)));
+			}
+		}
 
 		//Bind and Generate Info
 
@@ -975,6 +1029,32 @@ public:
 
 		Console_OutputLog(to_wstring("Cloth: " + _name + " Initalised"), LOGINFO);
 
+
+	}
+
+	void Tick(float deltaTime) {
+		for (size_t i = 0; i < this->clothConstraints.size(); i++)
+		{
+			this->clothConstraints.at(i)->Update();
+		}
+
+		int k = 0;
+		for (UINT i = 0; i < this->size.y - 1; ++i)
+		{
+			for (UINT j = 0; j < this->size.x; ++j)
+			{
+				//ClothVertices.at(k) = this->clothNodes.at(i).at(j)->position.x; //x
+				//ClothVertices.at(k+1) = this->clothNodes.at(i).at(j)->position.y; //y
+				//ClothVertices.at(k+2) = this->clothNodes.at(i).at(j)->position.z; //z
+
+				//next section of verts
+				//k += 6;
+
+				ClothVertices.at(k) += 2;
+
+				k += 6;
+			}
+		}
 
 	}
 
@@ -1049,7 +1129,8 @@ private:
 	vector<GLfloat> ClothVertices;
 	vector<GLuint>  ClothIndices;
 	vector<glm::vec3>  ClothNormals;
-
+	vector<vector<ClothNode*>> clothNodes;
+	vector<ClothConstraint*> clothConstraints;
 
 	Camera* camera = nullptr;
 	GLuint VAO = NULL;

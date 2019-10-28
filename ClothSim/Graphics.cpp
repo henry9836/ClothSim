@@ -67,6 +67,8 @@ void Update() {
 	camera->Tick(screen, deltaTime);
 	FlashRed(&backColor, deltaTime);
 
+	cloth->Tick(deltaTime);
+
 	//Input
 	float speed = 5;
 	if (input.CheckKeyDown(87)) { //W
@@ -80,6 +82,12 @@ void Update() {
 	}
 	if (input.CheckKeyDown(68)) { //D
 		camera->camPos.x += speed * deltaTime;
+	}
+	if (input.CheckKeyDown(82)) { //R
+		camera->camPos.y += speed * deltaTime;
+	}
+	if (input.CheckKeyDown(70)) { //F
+		camera->camPos.y -= speed * deltaTime;
 	}
 	if (input.CheckKeyDown(88)) { //X
 		cloth->wireframe = true;
@@ -151,8 +159,7 @@ void InitializeOpenGL(int argc, char* argv[]) {
 	*/
 
 	cloth = new Cloth();
-	cloth->Initalise(camera, glm::vec2(1000,1000), "Cloth");
-
+	cloth->Initalise(camera, glm::vec2(100,100), "Cloth");
 	/*
 			==========
 			// TANK //
