@@ -16,7 +16,7 @@ float deltaTime = 0;
 float currentTime = 0;
 float pasttime = 0;
 
-glm::vec3 backColor = glm::vec3(0, 0, 0);
+glm::vec3 backColor = glm::vec3(1, 0, 0);
 
 bool goingup = true;
 
@@ -68,7 +68,7 @@ void Update() {
 	//Object Ticks
 
 	camera->Tick(screen, deltaTime);
-	FlashRed(&backColor, deltaTime);
+	//FlashRed(&backColor, deltaTime);
 
 	cloth->Tick(deltaTime);
 

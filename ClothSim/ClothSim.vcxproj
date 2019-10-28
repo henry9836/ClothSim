@@ -173,11 +173,18 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelMesh.h" />
     <ClInclude Include="ObjectManager.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="ScreenInfo.h" />
     <ClInclude Include="ShaderLoader.h" />
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="TextLabel.h" />
     <ClInclude Include="TextureLoader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ClothSim.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\Textures\clof.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

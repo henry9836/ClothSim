@@ -701,7 +701,7 @@ public:
 struct ClothNode {
 public:
 	glm::vec3 position = glm::vec3(0, 0, 0);
-	glm::vec3 velocity = glm::vec3(0, 0, 0);
+	glm::vec3 oldPosition = glm::vec3(0, 0, 0);
 	glm::vec3 acceleration = glm::vec3(0, 0, 0);
 	glm::vec3 normal = glm::vec3(0, 0, 0);
 	
@@ -725,10 +725,11 @@ public:
 	}
 
 	void Update() {
-
-		glm::vec3 gravityForce(0, mass * grav, 0);
-		this->ApplyForce(gravityForce);
-		acceleration -= velocity * damping / mass;
+		if (!staticNode) {
+			oldPosition = position;
+			position = position + (position - oldPosition) * (1.0f - damping) + acceleration * 0.25f;
+			acceleration = glm::vec3(0, 0, 0); // acceleration is reset since it HAS been translated into a change in position (and implicitely into velocity)	
+		}
 	}
 	void ApplyForce(glm::vec3 force) {
 		acceleration += force / mass;
@@ -738,27 +739,21 @@ public:
 struct ClothConstraint {
 public:
 	const float stiffness = 0.8f;
-	const float restingDistance = 5;
+	float restingDistance = 5;
 	ClothNode* p1;
 	ClothNode* p2;
 
 	ClothConstraint(ClothNode* _p1, ClothNode* _p2) {
 		p1 = _p1;
 		p2 = _p2;
+		restingDistance = glm::vec3(_p1->position - p2->position).length();
 	}
 
 	void Update() {
-		glm::vec3 delta = p2->position - p1->position;
-		glm::vec3 deltaLength = sqrt(delta * delta);
-		glm::vec3 difference = (deltaLength - restingDistance) / deltaLength;
-		float im1 = 1 / p1->mass;
-		float im2 = 1 / p2->mass;
-
-		p1->position -= delta * (im1 / (im1 + im2)) * stiffness * difference;
-		p2->position += delta * (im2 / (im1 + im2)) * stiffness * difference;
-
-		p1->Update();
-		p2->Update();
+		glm::vec3 correctionVector = glm::vec3(p1->position - p2->position) * (1 - restingDistance / glm::vec3(p1->position - p2->position).length()); // The offset vector that could moves p1 into a distance of rest_distance to p2
+		glm::vec3 correctionVectorHalf = correctionVector * 0.5f; // Lets make it half that length, so that we can move BOTH p1 and p2.
+		p1->position += (correctionVectorHalf); // correctionVectorHalf is pointing from p1 to p2, so the length should move p1 half the length needed to satisfy the constraint.
+		p2->position += (-correctionVectorHalf); // we must move p2 the negative direction of correctionVectorHalf since it points from p2 to p1, and not p1 to p2.
 	}
 };
 
@@ -930,9 +925,6 @@ public:
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 		glEnableVertexAttribArray(1);
 
-		/*glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-		glEnableVertexAttribArray(2);*/
-
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
 		glEnableVertexAttribArray(2);
 	}
@@ -995,11 +987,6 @@ public:
 				heightInfo[i * (unsigned int)this->size.x + j] = 150;
 				float y = heightInfo[i * (unsigned int)this->size.x + j];
 
-				//Positions
-				/*this->ClothVertices.push_back(x);
-				this->ClothVertices.push_back(y);
-				this->ClothVertices.push_back(z);*/
-
 				//clothNode Position
 				this->clothNodes.at(i).push_back(new ClothNode(glm::vec3(x,y,z)));
 
@@ -1020,6 +1007,13 @@ public:
 				this->ClothVertices.push_back(i * dv);
 
 			}
+		}
+
+		//Set cloth top to static
+
+		for (size_t i = 0; i < clothNodes.at(0).size(); i++)
+		{
+			this->clothNodes.at(20).at(i)->staticNode = true;
 		}
 
 		//Create Indices
@@ -1089,10 +1083,19 @@ public:
 	}
 
 	void Tick(float deltaTime) {
-		/*for (size_t i = 0; i < this->clothConstraints.size(); i++)
+		for (size_t i = 0; i < this->clothConstraints.size(); i++)
 		{
 			this->clothConstraints.at(i)->Update();
-		}*/
+		}
+
+		for (size_t i = 0; i < this->clothNodes.size(); i++)
+		{
+			for (size_t j = 0; j < this->clothNodes.at(0).size(); j++)
+			{
+				this->clothNodes.at(i).at(j)->ApplyForce(glm::vec3(0.0f, -1.0f, 0.0f));
+				this->clothNodes.at(i).at(j)->Update();
+			}
+		}
 
 		int k = 0;
 		for (UINT i = 0; i < this->size.y - 2; ++i)
