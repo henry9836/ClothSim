@@ -56,6 +56,7 @@ public:
 	clothConstraint(clothNode* _p1, clothNode* _p2) {
 		p1 = _p1;
 		p2 = _p2;
+		stableDistance = glm::vec3(p2->position - p1->position).length();
 	}
 
 	void Tick(float deltaTime) {
