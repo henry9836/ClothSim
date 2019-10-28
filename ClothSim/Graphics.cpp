@@ -1,200 +1,156 @@
 #include "Graphics.h"
 
-ScreenInfo screen;
 Cloth* cloth;
-Terrain* terrian;
-Camera* camera;
-Model* tank;
-
-Input input;
-
-//Text
-TextLabel text;
-
+Plane* ground;
 
 float deltaTime = 0;
 float currentTime = 0;
 float pasttime = 0;
 
-glm::vec3 backColor = glm::vec3(1, 0, 0);
+//Cloth effects
 
-bool goingup = true;
+float windAmp = 1.0f;
 
-void FlashRed(glm::vec3* inColor, float deltaTime) {
-	float increase = deltaTime;
-	if (goingup) {
-		if (inColor->x >= 1) {
-			goingup = !goingup;
-		}
-		else {
-			inColor->x += increase;
-		}
-	}
-	else {
-		if (inColor->x <= 0) {
-			goingup = !goingup;
-		}
-		else {
-			inColor->x -= increase;
-		}
-	}
-}
+bool gravity = false;
+bool wind = false;
+
+glm::vec3 windDir = glm::vec3(0.0f, 0.5f, 0.5f);
+
 
 void Render() {
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-	glTranslatef(-6.5, 6, -9.0f);
+	
+	glTranslatef(-30, -10, -50.0f);
 	glRotatef(25, 0, 1, 0);
 
-	glClearColor(backColor.x, backColor.y, backColor.z, 1.0);
-
-	cloth->Render(camera);
-
-	//terrian->Render(camera);
-
-	tank->Render();
-
-	text.Render();
+	ground->Render();
+	cloth->Render();
 
 	glutSwapBuffers();
 }
 
 void Update() {
+
 	//Set deltaTime
 	currentTime = static_cast<float>(glutGet(GLUT_ELAPSED_TIME));
 	deltaTime = ((currentTime - pasttime) * 0.001f);
 	pasttime = currentTime;
-	
+
+	//Cloth Effects
+	if (gravity) {
+		cloth->globalForce(glm::vec3(0, -9.8, 0) * deltaTime);
+	}
+	if (wind) {
+		cloth->ApplyWind(windDir, windAmp);
+	}
 	//Object Ticks
 
-	camera->Tick(screen, deltaTime);
-	//FlashRed(&backColor, deltaTime);
-
 	cloth->Tick(deltaTime);
-
-	//Input
-	float speed = 5;
-	if (input.CheckKeyDown(87)) { //W
-		camera->camPos.z += speed * deltaTime;
-	}
-	if (input.CheckKeyDown(83)) { //S
-		camera->camPos.z -= speed * deltaTime;
-	}
-	if (input.CheckKeyDown(65)) { //A
-		camera->camPos.x -= speed * deltaTime;
-	}
-	if (input.CheckKeyDown(68)) { //D
-		camera->camPos.x += speed * deltaTime;
-	}
-	if (input.CheckKeyDown(82)) { //R
-		camera->camPos.y += speed * deltaTime;
-	}
-	if (input.CheckKeyDown(70)) { //F
-		camera->camPos.y -= speed * deltaTime;
-	}
-	if (input.CheckKeyDown(88)) { //X
-		cloth->wireframe = true;
-	}
-	if (input.CheckKeyDown(90)) { //Z
-		cloth->wireframe = false;
-	}
-
-	//terrian sinks
-	terrian->position.y -= 1.0f * deltaTime;
 
 	Render();
 }
 
-void InitializeOpenGL(int argc, char* argv[]) {
-	Console_OutputLog(L"Initalizing OpenGL", LOGINFO);
+void keyboardOther(int key, int x, int y) {
+	wcout << L"PRESSED: " << key << endl;
 
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
-	glutInitWindowPosition(100, 50);
-	glutInitWindowSize((int)screen.SCR_WIDTH, (int)screen.SCR_HEIGHT);
-	glutCreateWindow("Cloth Simulator");
+	if (key == 101) {
+		if (windDir.y < 1) {
+			windDir.y += 0.1f;
+		}
+	}
+	if (key == 103) {
+		if (windDir.y > -1) {
+			windDir.y -= 0.1f;
+		}
+	}
+	if (key == 102) {
+		if (windDir.x < 1) {
+			windDir.x += 0.1f;
+		}
+	}
+	if (key == 100) {
+		if (windDir.x > -1) {
+			windDir.x -= 0.1f;
+		}
+	}
+}
 
-	if (glewInit() != GLEW_OK) {
-		Console_OutputLog(L"Glew INIT FAILED! The program cannot recover from this error", LOGFATAL);
-		system("pause");
-		exit(0);
+void keyboardInput(unsigned char key, int x, int y) {
+	wcout << L"PRESSED: " << key << endl;
+
+	if (key == 27) { //esc
+		glutLeaveMainLoop();
+	}
+	if (key == 100 || key == 68) { //d
+		cloth->AllDyanmic();
+	}
+	if (key == 103 || key == 71) { //g
+		gravity = !gravity;
 	}
 
-	glutSetOption(GLUT_MULTISAMPLE, 16);
-	glEnable(GL_MULTISAMPLE);
+	if (key == 114 || key == 82) { //r
+		gravity = false;
+		wind = false;
+		glm::vec3 windDir = glm::vec3(0.0f, 0.5f, 0.5f);
+		windAmp = 1;
+		cloth->Reset();
+	}
+
+	if (key == 119 || key == 97) { //w
+		wind = !wind;
+	}
+
+	if (key == 13) { //Enter
+		windAmp += 1;
+	}
+	if (key == 113) { //RShift
+		windAmp -= 1;
+	}
+}
+
+void Resize(int w, int h) {
+	glViewport(0, 0, w, h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	if (h == 0)
+		gluPerspective(80, (float)w, 1.0, 5000.0);
+	else
+		gluPerspective(80, (float)w / (float)h, 1.0, 5000.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
+void InitializeOpenGL(int argc, char* argv[])
+{
+
+	Console_OutputLog(L"Initalizing OpenGL...", LOGINFO);
+
+	glutInit(&argc, argv);
+
+	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+	glutInitWindowSize(1280, 720);
+
+	glutCreateWindow("CLOF");
+
+	glClearColor(0.5, 0.0, 0.0, 1.0);
+
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-	//glEnable(GL_CULL_FACE);
-	//glFrontFace(GL_CCW);
-	//glCullFace(GL_BACK);
 
-	glClearColor(1.0, 0.0, 0.0, 1.0);
-
-	/*
-			===============================================
-			// CREATE, INITALISE AND ASSIGN GAME OBJECTS //
-			===============================================
-	*/
-
-
-	/*
-			============
-			// CAMERA //
-			============
-	*/
-	camera = new Camera();
-	camera->initializeCamera();
-	camera->SwitchMode(camera->CONTROL, glm::vec3(0,0,0), glm::vec3(0,0,1), glm::vec3(0,0,1), 1, 1);
-
-	/*
-			===========
-			// TERRIAN //
-			===========
-	*/
-
-	terrian = new Terrain();
-	terrian->Initalise(camera, "mountain.raw", "Terrian");
-
-	/*
-			===========
-			// CLOTH //
-			===========
-	*/
-
-	cloth = new Cloth();
-	cloth->Initalise(camera, glm::vec2(100,100), "Cloth");
-	/*
-			==========
-			// TANK //
-			==========
-	*/
-	tank = new Model("Resources/Models/Tank/Tank.obj", camera, "Tank", 0.0f, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f, 0.5f, 0.5f), "Resources/Shaders/3DObject_Diffuse.vs", "Resources/Shaders/3DObject_BlinnPhong.fs");
+	Console_OutputLog(L"Creating Objects...", LOGINFO);
 	
-	/*
-			==========
-			// TEXT //
-			==========
-	*/
+	ground = new Plane(glm::vec3(0,-20,0), 1000, glm::vec3(0.0, 1.0, 0.0));
 
-	text = TextLabel(screen, "This is a test", "Resources/Fonts/TerminusTTF-4.47.0.ttf", glm::vec2(screen.SCR_WIDTH * -0.48,screen.SCR_HEIGHT * 0.43));
-	text.SetScale(static_cast<GLfloat>(1.0));
-
-	//Start The Game
+	cloth = new Cloth(glm::vec2(50,50), 1.0f, ground->transform.position.y+1.0f);
 
 	glutDisplayFunc(Render);
-
 	glutIdleFunc(Update);
-
-	glutKeyboardFunc(Input::KeyboardDown);
-	glutKeyboardUpFunc(Input::KeyboardUp);
-
-	glutSpecialFunc(Input::specialCharDown);
-	glutSpecialUpFunc(Input::specialCharUp);
+	glutReshapeFunc(Resize);
+	glutKeyboardFunc(keyboardInput);
+	glutSpecialFunc(keyboardOther);
 
 	Console_OutputLog(L"Game Assets Initalised. Starting Game...", LOGINFO);
 
 	glutMainLoop();
 
-	return;
 }
-
