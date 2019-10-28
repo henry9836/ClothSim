@@ -102,10 +102,10 @@ void keyboardInput(unsigned char key, int x, int y) {
 	}
 
 	if (key == 13) { //Enter
-		windAmp += 1;
-	}
-	if (key == 113) { //RShift
 		windAmp -= 1;
+	}
+	if (key == 92) { // \/ button
+		windAmp += 1;
 	}
 }
 
