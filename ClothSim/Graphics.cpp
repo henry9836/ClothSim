@@ -41,13 +41,16 @@ void FlashRed(glm::vec3* inColor, float deltaTime) {
 }
 
 void Render() {
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	glLoadIdentity();
+	glTranslatef(-6.5, 6, -9.0f);
+	glRotatef(25, 0, 1, 0);
 
 	glClearColor(backColor.x, backColor.y, backColor.z, 1.0);
 
 	cloth->Render(camera);
 
-	terrian->Render(camera);
+	//terrian->Render(camera);
 
 	tank->Render();
 
@@ -121,9 +124,9 @@ void InitializeOpenGL(int argc, char* argv[]) {
 	glEnable(GL_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	glEnable(GL_CULL_FACE);
-	glFrontFace(GL_CCW);
-	glCullFace(GL_BACK);
+	//glEnable(GL_CULL_FACE);
+	//glFrontFace(GL_CCW);
+	//glCullFace(GL_BACK);
 
 	glClearColor(1.0, 0.0, 0.0, 1.0);
 

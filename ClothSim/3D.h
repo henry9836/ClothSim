@@ -766,19 +766,14 @@ class Cloth {
 
 public:
 
-	glm::vec3 crossMultiply(glm::vec3 a, glm::vec3 b) {
-		glm::vec3 result = glm::vec3(0, 0, 0);
-
-		return result;
-	}
-
 	glm::vec3 findNodeTriangleNormal(ClothNode* n1, ClothNode* n2, ClothNode* n3) {
 		glm::vec3 result = glm::vec3(0,0,0);
 
 		glm::vec3 v1 = n2->position - n1->position;
 		glm::vec3 v2 = n3->position - n1->position;
 
-		result = crossMultiply(v1, v2);
+		result = glm::cross(v1, v2);
+		result = glm::normalize(result);
 
 		return result;
 	}
@@ -809,22 +804,30 @@ public:
 
 		//Update Cloth Node Normals
 
-		for (size_t i = 0; i < this->size.y - 1; i++)
+		for (size_t i = 0; i < this->size.y - 2; i++)
 		{
-			for (size_t j = 0; j < this->size.x - 1; j++)
+			for (size_t j = 0; j < this->size.x - 2; j++)
 			{
-				clothNodes.at(i).at(j)->normal = glm::vec3(0, 0, 0);
-				clothNodes.at(i).at(j)->normal = findNodeTriangleNormal();
 
-				/*Vec3 normal = calcTriangleNormal(getParticle(x + 1, y), getParticle(x, y), getParticle(x, y + 1));
-				getParticle(x + 1, y)->addToNormal(normal);
-				getParticle(x, y)->addToNormal(normal);
-				getParticle(x, y + 1)->addToNormal(normal);
+				//A---B
+				//| / |
+				//C---D
 
-				normal = calcTriangleNormal(getParticle(x + 1, y + 1), getParticle(x + 1, y), getParticle(x, y + 1));
-				getParticle(x + 1, y + 1)->addToNormal(normal);
-				getParticle(x + 1, y)->addToNormal(normal);
-				getParticle(x, y + 1)->addToNormal(normal);*/
+				//A
+				clothNodes.at(i).at(j)->normal = findNodeTriangleNormal(clothNodes.at(i).at(j), clothNodes.at(i).at(j+1), clothNodes.at(i+1).at(j));
+				//B
+				clothNodes.at(i).at(j+1)->normal = clothNodes.at(i).at(j)->normal;
+				//C
+				clothNodes.at(i+1).at(j)->normal = clothNodes.at(i).at(j)->normal;
+
+				//B
+				clothNodes.at(i).at(j + 1)->normal = findNodeTriangleNormal(clothNodes.at(i).at(j + 1), clothNodes.at(i + 1).at(j + 1), clothNodes.at(i + 1).at(j));
+				//D
+				clothNodes.at(i + 1).at(j + 1)->normal = clothNodes.at(i).at(j + 1)->normal;
+				//C
+				clothNodes.at(i + 1).at(j)->normal = clothNodes.at(i).at(j + 1)->normal;
+
+
 			}
 		}
 
@@ -890,6 +893,51 @@ public:
 		}
 	}
 
+	void GenInfo() {
+		glGenTextures(1, &this->texture);
+		glBindTexture(GL_TEXTURE_2D, this->texture);
+
+		int width, height;
+
+		unsigned char* image = SOIL_load_image("Resources/Textures/cloth.png", &width, &height, 0, SOIL_LOAD_RGBA);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		SOIL_free_image_data(image);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDisable(GL_BLEND);
+
+		glGenVertexArrays(1, &this->VAO);
+		glBindVertexArray(this->VAO);
+
+		glGenBuffers(1, &this->VBO);
+		glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+		glBufferData(GL_ARRAY_BUFFER, this->ClothVertices.size() * sizeof(GLfloat), &this->ClothVertices[0], GL_STATIC_DRAW);
+
+		glGenBuffers(1, &this->EBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->ClothIndices.size() * sizeof(GLuint), &this->ClothIndices[0], GL_STATIC_DRAW);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
+
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(1);
+
+		/*glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(2);*/
+
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(2);
+	}
+
+
 	void Initalise(Camera* _cam, glm::vec2 _size, std::string _name) {
 		Console_OutputLog(to_wstring("Initalising Cloth: " + _name), LOGINFO);
 
@@ -924,7 +972,7 @@ public:
 
 		ClothNormals.resize(totalSize + 1);
 		int inter = 0;
-		findNormal();
+		//findNormal();
 
 		//size collision vectors
 		collisionInfo.resize((unsigned int)this->size.y);
@@ -937,23 +985,28 @@ public:
 		clothNodes.resize((unsigned int)this->size.y);
 
 		//Create Verts
-		for (UINT i = 0; i < (unsigned int)this->size.y - 1; ++i)
+		for (UINT i = 0; i < (unsigned int)this->size.y; ++i)
 		{
 			float z = halfDepth - i * 1.0f;
 			for (UINT j = 0; j < (unsigned int)this->size.x; ++j)
 			{
 
 				float x = -halfWidth + j * 1.0f;
+				heightInfo[i * (unsigned int)this->size.x + j] = 150;
 				float y = heightInfo[i * (unsigned int)this->size.x + j];
 
-
 				//Positions
-				this->ClothVertices.push_back(x);
+				/*this->ClothVertices.push_back(x);
 				this->ClothVertices.push_back(y);
-				this->ClothVertices.push_back(z);
+				this->ClothVertices.push_back(z);*/
 
 				//clothNode Position
 				this->clothNodes.at(i).push_back(new ClothNode(glm::vec3(x,y,z)));
+
+				//Positions
+				this->ClothVertices.push_back(clothNodes.at(i).back()->position.x);
+				this->ClothVertices.push_back(clothNodes.at(i).back()->position.y);
+				this->ClothVertices.push_back(clothNodes.at(i).back()->position.z);
 
 				//Normal
 				this->ClothVertices.push_back(ClothNormals[inter].x);
@@ -1020,44 +1073,7 @@ public:
 
 		//Bind and Generate Info
 
-		glGenTextures(1, &this->texture);
-		glBindTexture(GL_TEXTURE_2D, this->texture);
-
-		int width, height;
-
-		unsigned char* image = SOIL_load_image("Resources/Textures/cloth.png", &width, &height, 0, SOIL_LOAD_RGBA);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		SOIL_free_image_data(image);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glDisable(GL_BLEND);
-
-		glGenVertexArrays(1, &this->VAO);
-		glBindVertexArray(this->VAO);
-
-		glGenBuffers(1, &this->VBO);
-		glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-		glBufferData(GL_ARRAY_BUFFER, this->ClothVertices.size() * sizeof(GLfloat), &this->ClothVertices[0], GL_STATIC_DRAW);
-
-		glGenBuffers(1, &this->EBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->ClothIndices.size() * sizeof(GLuint), &this->ClothIndices[0], GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
-
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-		glEnableVertexAttribArray(1);
-
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-		glEnableVertexAttribArray(2); // REMEMBER UR INDICES
+		GenInfo();
 
 		//Create program
 
@@ -1073,107 +1089,82 @@ public:
 	}
 
 	void Tick(float deltaTime) {
-		for (size_t i = 0; i < this->clothConstraints.size(); i++)
+		/*for (size_t i = 0; i < this->clothConstraints.size(); i++)
 		{
 			this->clothConstraints.at(i)->Update();
-		}
+		}*/
 
 		int k = 0;
-		for (UINT i = 0; i < this->size.y - 1; ++i)
+		for (UINT i = 0; i < this->size.y - 2; ++i)
 		{
-			for (UINT j = 0; j < this->size.x; ++j)
+			for (UINT j = 0; j < this->size.x - 2; ++j)
 			{
-				//ClothVertices.at(k) = this->clothNodes.at(i).at(j)->position.x; //x
-				//ClothVertices.at(k+1) = this->clothNodes.at(i).at(j)->position.y; //y
-				//ClothVertices.at(k+2) = this->clothNodes.at(i).at(j)->position.z; //z
+				ClothVertices.at(k) = this->clothNodes.at(i).at(j)->position.x; //x 
+				ClothVertices.at(k+1) = this->clothNodes.at(i).at(j)->position.y; //y 
+				ClothVertices.at(k+2) = this->clothNodes.at(i).at(j)->position.z; //z 
 
-				//next section of verts
-				//k += 6;
-
-				ClothVertices.at(k) *= 2;
-				ClothVertices.at(k+1) *= 2;
-				ClothVertices.at(k+2) *= 2;
-
-				k += 6;
+				k += 8;
 			}
 		}
 
-		wcout << L"LP";
-
 	}
+
 
 	void Render(Camera* camera) {
 
-		//Find normals for nodes
-
+		//Find nodes
+		GenInfo();
 		findNormal();
 
-		glBegin(GL_TRIANGLES);
-		
-		for (size_t i = 0; i < clothNodes.size(); i++)
-		{
-			glm::vec3(1.0, 1.0, 1.0);
-			glNormal3fv((GLfloat*) & (p1->getNormal().normalized()));
-			glVertex3fv((GLfloat*) & (p1->getPos()));
 
-			glNormal3fv((GLfloat*) & (p2->getNormal().normalized()));
-			glVertex3fv((GLfloat*) & (p2->getPos()));
+		glUseProgram(this->program);
+		glBindVertexArray(this->VAO);
 
-			glNormal3fv((GLfloat*) & (p3->getNormal().normalized()));
-			glVertex3fv((GLfloat*) & (p3->getPos()));
+		glm::mat4 model;
+		glm::mat4 translationMatrix = glm::translate(glm::mat4(), position);
+		glm::mat4 rotationZ = glm::rotate(glm::mat4(), glm::radians(this->rotationAngle), this->rotationAxisZ);
+		glm::mat4 scaleMatrix = glm::scale(glm::mat4(), scale);
+		model = translationMatrix * rotationZ * scaleMatrix;
+		glm::mat4 mvp = camera->proj * camera->view * model;
+		glm::vec3 camPos = camera->camPos;
+
+		//POSITION AND SCALE
+		glm::mat4 projCalc = camera->proj * camera->view * model;
+
+		//PATCH
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+		if (!wireframe) {
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, this->texture);
+
+			glUniform1i(glGetUniformLocation(this->program, "texture_diffuse1"), 0);
 		}
 
-		glEnd();
 
+		//PATCH END
+		GLint mvpLoc = glGetUniformLocation(program, "proj_calc");
+		glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(projCalc));
+		GLint modelPass = glGetUniformLocation(program, "model");
+		glUniformMatrix4fv(modelPass, 1, GL_FALSE, glm::value_ptr(model));
+		GLint camPosPass = glGetUniformLocation(program, "camPos");
+		glUniformMatrix3fv(camPosPass, 1, GL_FALSE, glm::value_ptr(camPos));
+		if (!wireframe) {
+			glDrawElements(GL_TRIANGLES, this->ClothIndices.size(), GL_UNSIGNED_INT, 0);
+		}
+		else {
+			glDrawElements(GL_LINES, this->ClothIndices.size(), GL_UNSIGNED_INT, 0);
+		}
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
 
-		//glUseProgram(this->program);
-		//glBindVertexArray(this->VAO);
-
-		//glm::mat4 model;
-		//glm::mat4 translationMatrix = glm::translate(glm::mat4(), position);
-		//glm::mat4 rotationZ = glm::rotate(glm::mat4(), glm::radians(this->rotationAngle), this->rotationAxisZ);
-		//glm::mat4 scaleMatrix = glm::scale(glm::mat4(), scale);
-		//model = translationMatrix * rotationZ * scaleMatrix;
-		//glm::mat4 mvp = camera->proj * camera->view * model;
-		//glm::vec3 camPos = camera->camPos;
-
-		////POSITION AND SCALE
-		//glm::mat4 projCalc = camera->proj * camera->view * model;
-
-		////PATCH
-
-		//glEnable(GL_BLEND);
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-
-		//if (!wireframe) {
-
-		//	glActiveTexture(GL_TEXTURE0);
-		//	glBindTexture(GL_TEXTURE_2D, this->texture);
-
-		//	glUniform1i(glGetUniformLocation(this->program, "texture_diffuse1"), 0);
-		//}
-
-
-		////PATCH END
-		//GLint mvpLoc = glGetUniformLocation(program, "proj_calc");
-		//glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(projCalc));
-		//GLint modelPass = glGetUniformLocation(program, "model");
-		//glUniformMatrix4fv(modelPass, 1, GL_FALSE, glm::value_ptr(model));
-		//GLint camPosPass = glGetUniformLocation(program, "camPos");
-		//glUniformMatrix3fv(camPosPass, 1, GL_FALSE, glm::value_ptr(camPos));
-		//if (!wireframe) {
-		//	glDrawElements(GL_TRIANGLES, this->ClothIndices.size(), GL_UNSIGNED_INT, 0);
-		//}
-		//else {
-		//	glDrawElements(GL_LINES, this->ClothIndices.size(), GL_UNSIGNED_INT, 0);
-		//}
-		//glDisable(GL_CULL_FACE);
-		//glDisable(GL_BLEND);
-
-		////Clearing the vertex array
-		//glBindVertexArray(0);
-		//glUseProgram(0);
+		//Clearing the vertex array
+		glBindVertexArray(0);
+		glUseProgram(0);
 
 	}
 
