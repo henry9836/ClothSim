@@ -150,6 +150,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Cloth.h" />
     <ClInclude Include="ConsoleController.h" />
     <ClInclude Include="ft2build.h" />
     <ClInclude Include="Graphics.h" />

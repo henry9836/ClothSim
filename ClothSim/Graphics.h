@@ -10,5 +10,6 @@
 #include FT_FREETYPE_H
 
 #include "ConsoleController.h"
+#include "Cloth.h"
 
 void InitializeOpenGL(int argc, char* argv[]);

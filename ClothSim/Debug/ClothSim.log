@@ -1,2 +1,16 @@
 ﻿  Graphics.cpp
+K:\Projects\ClothSim\ClothSim\Cloth.h(63,22): warning C4244: 'initializing': conversion from 'glm::tvec3<float,0>::length_type' to 'float', possible loss of data
+  main.cpp
+K:\Projects\ClothSim\ClothSim\Cloth.h(81,25): warning C4244: 'argument': conversion from 'T' to 'const unsigned int', possible loss of data
+K:\Projects\ClothSim\ClothSim\Cloth.h(81,25): warning C4244:         with
+K:\Projects\ClothSim\ClothSim\Cloth.h(81,25): warning C4244:         [
+K:\Projects\ClothSim\ClothSim\Cloth.h(81,25): warning C4244:             T=float
+K:\Projects\ClothSim\ClothSim\Cloth.h(81,25): warning C4244:         ]
+K:\Projects\ClothSim\ClothSim\Cloth.h(63,22): warning C4244: 'initializing': conversion from 'glm::tvec3<float,0>::length_type' to 'float', possible loss of data
+  Generating Code...
+K:\Projects\ClothSim\ClothSim\Cloth.h(81,25): warning C4244: 'argument': conversion from 'T' to 'const unsigned int', possible loss of data
+K:\Projects\ClothSim\ClothSim\Cloth.h(81,25): warning C4244:         with
+K:\Projects\ClothSim\ClothSim\Cloth.h(81,25): warning C4244:         [
+K:\Projects\ClothSim\ClothSim\Cloth.h(81,25): warning C4244:             T=float
+K:\Projects\ClothSim\ClothSim\Cloth.h(81,25): warning C4244:         ]
   ClothSim.vcxproj -> K:\Projects\ClothSim\Debug\ClothSim.exe

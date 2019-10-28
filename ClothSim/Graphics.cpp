@@ -1,12 +1,19 @@
 #include "Graphics.h"
 
+Cloth* cloth;
+
 float deltaTime = 0;
 float currentTime = 0;
 float pasttime = 0;
 
 void Render() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+	
+	glTranslatef(-6.5, 6, -9.0f);
+	glRotatef(25, 0, 1, 0);
 
+	cloth->Render();
 
 	glutSwapBuffers();
 }
@@ -17,6 +24,8 @@ void Update() {
 	currentTime = static_cast<float>(glutGet(GLUT_ELAPSED_TIME));
 	deltaTime = ((currentTime - pasttime) * 0.001f);
 	pasttime = currentTime;
+
+	cloth->Tick(deltaTime);
 
 	Render();
 }
@@ -53,6 +62,9 @@ void InitializeOpenGL(int argc, char* argv[])
 
 	glEnable(GL_DEPTH_TEST);
 
+	Console_OutputLog(L"Creating Objects...", LOGINFO);
+
+	cloth = new Cloth(glm::vec2(50,50), 1.0f);
 
 	glutDisplayFunc(Render);
 	glutIdleFunc(Update);
