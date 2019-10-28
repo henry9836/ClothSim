@@ -308,10 +308,10 @@ public:
 		{
 			for (UINT j = 2; j < this->imageSize.x; ++j)
 			{
-				float t = this->heightInfo[(i - 1) * this->imageSize.x + j];
-				float b = this->heightInfo[(i + 1) * this->imageSize.x + j];
-				float l = this->heightInfo[i * this->imageSize.x + j - 1];
-				float r = this->heightInfo[i * this->imageSize.x + j + 1];
+				float t = this->heightInfo[(i - 1) * (unsigned int)this->imageSize.x + j];
+				float b = this->heightInfo[(i + 1) * (unsigned int)this->imageSize.x + j];
+				float l = this->heightInfo[i * (unsigned int)this->imageSize.x + j - 1];
+				float r = this->heightInfo[i * (unsigned int)this->imageSize.x + j + 1];
 
 				glm::vec3 tanZ(0.0f, (t - b) * invTwoDZ, 1.0f);
 				glm::vec3 tanX(1.0f, (r - l) * invTwoDX, 0.0f);
@@ -320,7 +320,7 @@ public:
 				N = glm::cross(tanZ, tanX);
 				glm::normalize(N);
 
-				this->TerrianNormals[(i - 2) * this->imageSize.x + (j - 2)] = N;
+				this->TerrianNormals[(i - 2) * (unsigned int)this->imageSize.x + (j - 2)] = N;
 			}
 		}
 	}
@@ -353,10 +353,10 @@ public:
 				//  | /|
 				//  |/ |
 				// C*--*D
-				float A = heightInfo[row * this->imageSize.x + col];
-				float B = heightInfo[row * this->imageSize.x + col + 1];
-				float C = heightInfo[(row + 1) * this->imageSize.x + col];
-				float D = heightInfo[(row + 1) * this->imageSize.x + col + 1];
+				float A = heightInfo[row * (unsigned int)this->imageSize.x + col];
+				float B = heightInfo[row * (unsigned int)this->imageSize.x + col + 1];
+				float C = heightInfo[(row + 1) * (unsigned int)this->imageSize.x + col];
+				float D = heightInfo[(row + 1) * (unsigned int)this->imageSize.x + col + 1];
 
 				// Where we are relative to the cell.
 				float s = c - (float)col;
@@ -408,7 +408,7 @@ public:
 		else {
 			//Get Image Size
 			
-			int w, h, c, f = 0;
+			int w, h, f = 0;
 
 			unsigned char* image = SOIL_load_image
 			(
@@ -439,7 +439,7 @@ public:
 			this->rawData.resize(totalSize);
 			this->heightInfo.resize(totalSize * 2);
 
-			this->imageSize.x = sqrt(this->rawData.size());
+			this->imageSize.x = (float)sqrt((unsigned int)this->rawData.size());
 			this->imageSize.y = this->imageSize.x;
 
 			heightMap.close();
@@ -477,20 +477,20 @@ public:
 		findNormal();
 
 		//Create collision vectors
-		collisionInfo.resize(this->imageSize.y);
+		collisionInfo.resize((unsigned int)this->imageSize.y);
 		for (size_t i = 0; i < collisionInfo.size(); i++)
 		{
-			collisionInfo.at(i).resize(this->imageSize.x);
+			collisionInfo.at(i).resize((unsigned int)this->imageSize.x);
 		}
 
-		for (UINT i = 0; i < this->imageSize.y -1; ++i)
+		for (UINT i = 0; i < (unsigned int)this->imageSize.y -1; ++i)
 		{
 			float z = halfDepth - i * 1.0f;
-			for (UINT j = 0; j < this->imageSize.x; ++j)
+			for (UINT j = 0; j < (unsigned int)this->imageSize.x; ++j)
 			{
 
 				float x = -halfWidth + j * 1.0f;
-				float y = heightInfo[i * this->imageSize.x + j];
+				float y = heightInfo[i * (unsigned int)this->imageSize.x + j];
 
 
 				//Positions
@@ -519,15 +519,15 @@ public:
 		this->TerrianIndices.resize(totalSize*6);
 
 		int k = 0;
-		for (unsigned int i = 0; i < this->imageSize.y - 1; ++i) {
-			for (unsigned int j = 0; j < this->imageSize.x - 1; ++j) {
-				this->TerrianIndices[k] = i * this->imageSize.x + j;
-				this->TerrianIndices[k + 1] = i * this->imageSize.x + j + 1;
-				this->TerrianIndices[k + 2] = (i + 1) * this->imageSize.x + j;
+		for (unsigned int i = 0; i < (unsigned int)this->imageSize.y - 1; ++i) {
+			for (unsigned int j = 0; j < (unsigned int)this->imageSize.x - 1; ++j) {
+				this->TerrianIndices[k] = i * (unsigned int)this->imageSize.x + j;
+				this->TerrianIndices[k + 1] = i * (unsigned int)this->imageSize.x + j + 1;
+				this->TerrianIndices[k + 2] = (i + 1) * (unsigned int)this->imageSize.x + j;
 
-				this->TerrianIndices[k + 3] = (i + 1) * this->imageSize.x + j;
-				this->TerrianIndices[k + 4] = i * this->imageSize.x + j + 1;
-				this->TerrianIndices[k + 5] = (i + 1) * this->imageSize.x + j + 1;
+				this->TerrianIndices[k + 3] = (i + 1) * (unsigned int)this->imageSize.x + j;
+				this->TerrianIndices[k + 4] = i * (unsigned int)this->imageSize.x + j + 1;
+				this->TerrianIndices[k + 5] = (i + 1) * (unsigned int)this->imageSize.x + j + 1;
 
 				k += 6; // next quad
 			}
@@ -705,7 +705,7 @@ public:
 	glm::vec3 acceleration = glm::vec3(0, 0, 0);
 	
 	float mass = 1.0f;
-	float grav = 9.8;
+	float grav = 9.8f;
 	float damping = 0.1f;
 	
 	bool staticNode = false;
@@ -736,7 +736,7 @@ public:
 
 struct ClothConstraint {
 public:
-	const float stiffness = 0.8;
+	const float stiffness = 0.8f;
 	const float restingDistance = 5;
 	ClothNode* p1;
 	ClothNode* p2;
@@ -773,10 +773,10 @@ public:
 		{
 			for (UINT j = 2; j < this->size.x; ++j)
 			{
-				float t = this->heightInfo[(i - 1) * this->size.x + j];
-				float b = this->heightInfo[(i + 1) * this->size.x + j];
-				float l = this->heightInfo[i * this->size.x + j - 1];
-				float r = this->heightInfo[i * this->size.x + j + 1];
+				float t = this->heightInfo[(i - 1) * (unsigned int)this->size.x + j];
+				float b = this->heightInfo[(i + 1) * (unsigned int)this->size.x + j];
+				float l = this->heightInfo[i * (unsigned int)this->size.x + j - 1];
+				float r = this->heightInfo[i * (unsigned int)this->size.x + j + 1];
 
 				glm::vec3 tanZ(0.0f, (t - b) * invTwoDZ, 1.0f);
 				glm::vec3 tanX(1.0f, (r - l) * invTwoDX, 0.0f);
@@ -785,7 +785,7 @@ public:
 				N = glm::cross(tanZ, tanX);
 				glm::normalize(N);
 
-				this->ClothNormals[(i - 2) * this->size.x + (j - 2)] = N;
+				this->ClothNormals[(i - 2) * (unsigned int)this->size.x + (j - 2)] = N;
 			}
 		}
 	}
@@ -818,10 +818,10 @@ public:
 				//  | /|
 				//  |/ |
 				// C*--*D
-				float A = heightInfo[row * this->size.x + col];
-				float B = heightInfo[row * this->size.x + col + 1];
-				float C = heightInfo[(row + 1) * this->size.x + col];
-				float D = heightInfo[(row + 1) * this->size.x + col + 1];
+				float A = heightInfo[row * (unsigned int)this->size.x + col];
+				float B = heightInfo[row * (unsigned int)this->size.x + col + 1];
+				float C = heightInfo[(row + 1) * (unsigned int)this->size.x + col];
+				float D = heightInfo[(row + 1) * (unsigned int)this->size.x + col + 1];
 
 				// Where we are relative to the cell.
 				float s = c - (float)col;
@@ -857,7 +857,7 @@ public:
 		this->camera = _cam;
 		this->size = _size;
 
-		int totalSize = _size.x * _size.y;
+		int totalSize = (int)(_size.x * _size.y);
 
 		//Resize vectors to cloth size
 
@@ -887,24 +887,24 @@ public:
 		findNormal();
 
 		//size collision vectors
-		collisionInfo.resize(this->size.y);
+		collisionInfo.resize((unsigned int)this->size.y);
 		for (size_t i = 0; i < collisionInfo.size(); i++)
 		{
-			collisionInfo.at(i).resize(this->size.x);
+			collisionInfo.at(i).resize((unsigned int)this->size.x);
 		}
 		
 		//Resize node vector
-		clothNodes.resize(this->size.y);
+		clothNodes.resize((unsigned int)this->size.y);
 
 		//Create Verts
-		for (UINT i = 0; i < this->size.y - 1; ++i)
+		for (UINT i = 0; i < (unsigned int)this->size.y - 1; ++i)
 		{
 			float z = halfDepth - i * 1.0f;
-			for (UINT j = 0; j < this->size.x; ++j)
+			for (UINT j = 0; j < (unsigned int)this->size.x; ++j)
 			{
 
 				float x = -halfWidth + j * 1.0f;
-				float y = heightInfo[i * this->size.x + j];
+				float y = heightInfo[i * (unsigned int)this->size.x + j];
 
 
 				//Positions
@@ -939,13 +939,13 @@ public:
 		for (unsigned int i = 0; i < this->size.y - 1; ++i) { //y
 			for (unsigned int j = 0; j < this->size.x - 1; ++j) { //x
 
-				this->ClothIndices[k] = i * this->size.x + j;
-				this->ClothIndices[k + 1] = i * this->size.x + j + 1;
-				this->ClothIndices[k + 2] = (i + 1) * this->size.x + j;
+				this->ClothIndices[k] = i * (unsigned int)this->size.x + j;
+				this->ClothIndices[k + 1] = i * (unsigned int)this->size.x + j + 1;
+				this->ClothIndices[k + 2] = (i + 1) * (unsigned int)this->size.x + j;
 
-				this->ClothIndices[k + 3] = (i + 1) * this->size.x + j;
-				this->ClothIndices[k + 4] = i * this->size.x + j + 1;
-				this->ClothIndices[k + 5] = (i + 1) * this->size.x + j + 1;
+				this->ClothIndices[k + 3] = (i + 1) * (unsigned int)this->size.x + j;
+				this->ClothIndices[k + 4] = i * (unsigned int)this->size.x + j + 1;
+				this->ClothIndices[k + 5] = (i + 1) * (unsigned int)this->size.x + j + 1;
 
 				k += 6; // next quad
 			}
