@@ -6,6 +6,10 @@ float deltaTime = 0;
 float currentTime = 0;
 float pasttime = 0;
 
+//Cloth effects
+
+bool gravity = false;
+
 void Render() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
@@ -25,13 +29,30 @@ void Update() {
 	deltaTime = ((currentTime - pasttime) * 0.001f);
 	pasttime = currentTime;
 
+	//Cloth Effects
+	if (gravity) {
+		cloth->globalForce(glm::vec3(0, -9.8, 0) * deltaTime);
+	}
+
+	//Object Ticks
+
 	cloth->Tick(deltaTime);
 
 	Render();
 }
 
 void keyboardInput(unsigned char key, int x, int y) {
+	wcout << L"PRESSED: " << key << endl;
 
+	if (key == 27) { //esc
+		glutLeaveMainLoop();
+	}
+	if (key == 100 || key == 68) { //d
+		cloth->AllDyanmic();
+	}
+	if (key == 103 || key == 71) { //g
+		gravity = !gravity;
+	}
 }
 
 void Resize(int w, int h) {

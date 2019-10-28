@@ -15,7 +15,8 @@ const glm::vec3 zVector = glm::vec3(0, 0, 0);
 
 struct clothNode {
 protected:
-	const float damping = 0.01f;
+	//const float damping = 0.01f;
+	const float damping = 0.1f;
 	const float phyStep = 0.25f;
 public:
 	bool staticNode = false;
@@ -29,6 +30,10 @@ public:
 	clothNode(glm::vec3 pos) {
 		position = pos;
 		oldPosition = pos;
+	};
+	void addForce(glm::vec3 force)
+	{
+		acceleration += force / mass;
 	};
 	void Tick(float deltaTime) {
 		//If moveable
@@ -50,6 +55,7 @@ public:
 struct clothConstraint {
 public:
 	float stableDistance = 0.0f;
+	float currDistance = 0.0f;
 	clothNode* p1 = nullptr;
 	clothNode* p2 = nullptr;
 
@@ -60,13 +66,12 @@ public:
 	}
 
 	void Tick(float deltaTime) {
-		glm::vec3 direction = p2->position - p1->position;
-		float currDistance = direction.length();
-		glm::vec3 corrVec = direction * (1 - stableDistance / currDistance) * 0.5f;
+		glm::vec3 direction = p2->position - p1->position; //get direction from p2 to p1
+		currDistance = direction.length(); //get the distance between the points
+		glm::vec3 corrVec = (direction * (1 - stableDistance / currDistance)) * 0.5f; //find the vector to move the points towards each other if they are stretching
 		p1->moveBy(corrVec);
 		p2->moveBy(-corrVec);
 	}
-
 };
 
 class Cloth {
@@ -174,7 +179,7 @@ public:
 
 		calcNormals();
 
-		glBegin(GL_TRIANGLES);
+		glBegin(GL_LINES);
 
 		for (size_t y = 0; y < size.y - 1; y++)
 		{
@@ -230,6 +235,26 @@ public:
 			for (size_t x = 0; x < size.x; x++)
 			{
 				clothNodes.at(y).at(x)->Tick(deltaTime);
+			}
+		}
+	}
+
+	void AllDyanmic() {
+		for (size_t y = 0; y < size.y; y++)
+		{
+			for (size_t x = 0; x < size.x; x++)
+			{
+				clothNodes.at(y).at(x)->staticNode = false;
+			}
+		}
+	}
+
+	void globalForce(glm::vec3 dir) {
+		for (size_t y = 0; y < size.y; y++)
+		{
+			for (size_t x = 0; x < size.x; x++)
+			{
+				clothNodes.at(y).at(x)->addForce(dir);
 			}
 		}
 	}
