@@ -154,6 +154,7 @@
     <ClInclude Include="ConsoleController.h" />
     <ClInclude Include="ft2build.h" />
     <ClInclude Include="Graphics.h" />
+    <ClInclude Include="SimpleObjects.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ClothSim.rc" />

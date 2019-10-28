@@ -30,17 +30,38 @@ public:
 		position = pos;
 		oldPosition = pos;
 	};
-	void addForce(glm::vec3 force)
+	void addForce(glm::vec3 force, float groundLevel)
 	{
+		//Check if on ground
+		if (position.y < groundLevel) {
+			//if we are get rid of the y force
+			force.y = 0.0f;
+		}
+
 		acceleration += force / mass;
 	};
-	void Tick(float deltaTime) {
+	void Tick(float deltaTime, float groundLevel) {
+		
+		//Are we below the ground?
+		if (position.y < groundLevel) {
+			//put us back on the ground
+			position.y = groundLevel;
+			acceleration.y = 0;
+		}
+
 		//If moveable
 		if (!staticNode) {
-			glm::vec3 _p = position;
-			position = position + (position - oldPosition) * (1.0f - damping) + acceleration * phyStep;
-			oldPosition = _p;
-			acceleration = zVector;
+			//Are we on ground?
+			if (position.y > groundLevel) {
+				glm::vec3 _p = position;
+				position = position + (position - oldPosition) * (1.0f - damping) + acceleration * phyStep;
+				oldPosition = _p;
+				acceleration = zVector;
+			}
+			else {
+				//acceleration = zVector;
+				acceleration.y = 0;
+			}
 		}
 	}
 	void moveBy(glm::vec3 pos) {
@@ -75,10 +96,12 @@ public:
 
 class Cloth {
 public:
-	Cloth(glm::vec2 _size, float scaleFactor) {
+	Cloth(glm::vec2 _size, float scaleFactor, float _gL) {
 
 		Console_OutputLog(to_wstring("Creating Cloth Object Of Size: " + to_string(_size.x) + ":" + to_string(_size.y)), LOGINFO);
 		
+		groundLevel = _gL;
+
 		//set size of cloth
 		size = _size;
 
@@ -180,6 +203,9 @@ public:
 
 		glBegin(GL_LINES);
 
+		//Color
+		glColor3f(1.0f, 1.0f, 1.0f);
+		
 		for (size_t y = 0; y < size.y - 1; y++)
 		{
 			for (size_t x = 0; x < size.x - 1; x++)
@@ -233,7 +259,7 @@ public:
 		{
 			for (size_t x = 0; x < size.x; x++)
 			{
-				clothNodes.at(y).at(x)->Tick(deltaTime);
+				clothNodes.at(y).at(x)->Tick(deltaTime, groundLevel);
 			}
 		}
 	}
@@ -253,7 +279,7 @@ public:
 		{
 			for (size_t x = 0; x < size.x; x++)
 			{
-				clothNodes.at(y).at(x)->addForce(dir);
+				clothNodes.at(y).at(x)->addForce(dir, groundLevel);
 			}
 		}
 	}
@@ -261,5 +287,6 @@ public:
 	glm::vec2 size;
 	vector<vector<clothNode*>> clothNodes;
 	vector<clothConstraint*> clothConstraints;
+	float groundLevel = 0;
 
 };

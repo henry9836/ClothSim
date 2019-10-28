@@ -11,5 +11,6 @@
 
 #include "ConsoleController.h"
 #include "Cloth.h"
+#include "SimpleObjects.h"
 
 void InitializeOpenGL(int argc, char* argv[]);

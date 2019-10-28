@@ -1,6 +1,7 @@
 #include "Graphics.h"
 
 Cloth* cloth;
+Plane* ground;
 
 float deltaTime = 0;
 float currentTime = 0;
@@ -17,6 +18,7 @@ void Render() {
 	glTranslatef(-30, -10, -50.0f);
 	glRotatef(25, 0, 1, 0);
 
+	ground->Render();
 	cloth->Render();
 
 	glutSwapBuffers();
@@ -84,8 +86,10 @@ void InitializeOpenGL(int argc, char* argv[])
 	glEnable(GL_DEPTH_TEST);
 
 	Console_OutputLog(L"Creating Objects...", LOGINFO);
+	
+	ground = new Plane(glm::vec3(0,-20,0), 1000, glm::vec3(0.0, 1.0, 0.0));
 
-	cloth = new Cloth(glm::vec2(50,50), 1.0f);
+	cloth = new Cloth(glm::vec2(50,50), 1.0f, ground->transform.position.y+1.0f);
 
 	glutDisplayFunc(Render);
 	glutIdleFunc(Update);
