@@ -19,7 +19,7 @@ protected:
 	const float phyStep = 0.25f;
 public:
 	bool staticNode = false;
-	float mass = 1.0f;
+	float mass = 10.0f;
 	glm::vec3 position = glm::vec3(0, 0, 0);
 	glm::vec3 oldPosition = glm::vec3(0, 0, 0);
 	glm::vec3 acceleration = glm::vec3(0, 0, 0);
@@ -66,7 +66,6 @@ public:
 
 	void Tick(float deltaTime) {
 		glm::vec3 direction = p2->position - p1->position; //get direction from p2 to p1
-		//currDistance = direction.length(); //get the distance between the points
 		currDistance = glm::length(direction); //get the distance between the points
 		glm::vec3 corrVec = (direction * (1 - stableDistance / currDistance)) * 0.5f; //find the vector to move the points towards each other if they are stretching
 		p1->moveBy(corrVec);
