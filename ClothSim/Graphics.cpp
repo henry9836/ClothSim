@@ -9,7 +9,13 @@ float pasttime = 0;
 
 //Cloth effects
 
+float windAmp = 1.0f;
+
 bool gravity = false;
+bool wind = false;
+
+glm::vec3 windDir = glm::vec3(0.0f, 0.5f, 0.5f);
+
 
 void Render() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -35,12 +41,39 @@ void Update() {
 	if (gravity) {
 		cloth->globalForce(glm::vec3(0, -9.8, 0) * deltaTime);
 	}
-
+	if (wind) {
+		cloth->ApplyWind(windDir, windAmp);
+	}
 	//Object Ticks
 
 	cloth->Tick(deltaTime);
 
 	Render();
+}
+
+void keyboardOther(int key, int x, int y) {
+	wcout << L"PRESSED: " << key << endl;
+
+	if (key == 101) {
+		if (windDir.y < 1) {
+			windDir.y += 0.1f;
+		}
+	}
+	if (key == 103) {
+		if (windDir.y > -1) {
+			windDir.y -= 0.1f;
+		}
+	}
+	if (key == 102) {
+		if (windDir.x < 1) {
+			windDir.x += 0.1f;
+		}
+	}
+	if (key == 100) {
+		if (windDir.x > -1) {
+			windDir.x -= 0.1f;
+		}
+	}
 }
 
 void keyboardInput(unsigned char key, int x, int y) {
@@ -58,7 +91,21 @@ void keyboardInput(unsigned char key, int x, int y) {
 
 	if (key == 114 || key == 82) { //r
 		gravity = false;
+		wind = false;
+		glm::vec3 windDir = glm::vec3(0.0f, 0.5f, 0.5f);
+		windAmp = 1;
 		cloth->Reset();
+	}
+
+	if (key == 119 || key == 97) { //w
+		wind = !wind;
+	}
+
+	if (key == 13) { //Enter
+		windAmp += 1;
+	}
+	if (key == 113) { //RShift
+		windAmp -= 1;
 	}
 }
 
@@ -100,6 +147,7 @@ void InitializeOpenGL(int argc, char* argv[])
 	glutIdleFunc(Update);
 	glutReshapeFunc(Resize);
 	glutKeyboardFunc(keyboardInput);
+	glutSpecialFunc(keyboardOther);
 
 	Console_OutputLog(L"Game Assets Initalised. Starting Game...", LOGINFO);
 

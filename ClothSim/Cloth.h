@@ -289,6 +289,23 @@ public:
 		}
 	}
 
+	void ApplyWind(glm::vec3 windDir, float amp) {
+		for (size_t y = 0; y < size.y-1; y++)
+		{
+			for (size_t x = 0; x < size.x-1; x++)
+			{
+				//Add force onto the section of the cloth
+				glm::vec3 windNorm = glm::normalize(calcNormalSection(clothNodes.at(y).at(x), clothNodes.at(y).at(x + 1), clothNodes.at(y + 1).at(x)));
+
+				float dot = glm::dot(windDir, windNorm);
+
+				glm::vec3 force = (windNorm * dot) * amp;
+
+				clothNodes.at(y).at(x)->addForce(force, groundLevel);
+			}
+		}
+	}
+
 	void AllDyanmic() {
 		for (size_t y = 0; y < size.y; y++)
 		{
