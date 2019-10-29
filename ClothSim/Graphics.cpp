@@ -22,7 +22,6 @@ void Render() {
 	glLoadIdentity();
 	
 	glTranslatef(-10, -10, -100.0f);
-	//glRotatef(25, 0, 1, 0);
 	glRotatef(camAngle, 0, 1, 0);
 
 	ground->Render();
