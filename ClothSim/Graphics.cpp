@@ -6,12 +6,12 @@ Plane* ground;
 float deltaTime = 0;
 float currentTime = 0;
 float pasttime = 0;
-
+float camAngle = 0;
 //Cloth effects
 
 float windAmp = 1.0f;
 
-bool gravity = false;
+bool gravity = true;
 bool wind = false;
 
 glm::vec3 windDir = glm::vec3(0.0f, 0.5f, 0.5f);
@@ -21,8 +21,9 @@ void Render() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	
-	glTranslatef(-30, -10, -50.0f);
-	glRotatef(25, 0, 1, 0);
+	glTranslatef(-10, -10, -100.0f);
+	//glRotatef(25, 0, 1, 0);
+	glRotatef(camAngle, 0, 1, 0);
 
 	ground->Render();
 	cloth->Render();
@@ -82,31 +83,41 @@ void keyboardInput(unsigned char key, int x, int y) {
 	if (key == 27) { //esc
 		glutLeaveMainLoop();
 	}
-	if (key == 100 || key == 68) { //d
+	if (key == 100 || key == 68) { //d (Deattach)
 		cloth->AllDyanmic();
 	}
-	if (key == 103 || key == 71) { //g
+	if (key == 103 || key == 71) { //g (Gravity)
 		gravity = !gravity;
 	}
 
-	if (key == 114 || key == 82) { //r
+	if (key == 114 || key == 82) { //r (Reset)
 		gravity = false;
 		wind = false;
 		glm::vec3 windDir = glm::vec3(0.0f, 0.5f, 0.5f);
 		windAmp = 1;
+		camAngle = 0;
 		cloth->Reset();
 	}
 
-	if (key == 119 || key == 97) { //w
+	if (key == 119 || key == 97) { //w (Wind)
 		wind = !wind;
 	}
 
-	if (key == 13) { //Enter
+	if (key == 13) { //Enter Windspeed -
 		windAmp -= 1;
 	}
-	if (key == 92) { // \/ button
+	if (key == 92) { // \/ button Windspeed +
 		windAmp += 1;
 	}
+
+	if (key == 122 || key == 90) {//Z rotate cam left
+		camAngle -= 1.0f;
+	}
+
+	if (key == 120 || key == 88) {//Z rotate cam right
+		camAngle += 1.0f;
+	}
+
 }
 
 void Resize(int w, int h) {
@@ -139,7 +150,7 @@ void InitializeOpenGL(int argc, char* argv[])
 
 	Console_OutputLog(L"Creating Objects...", LOGINFO);
 	
-	ground = new Plane(glm::vec3(0,-20,0), 1000, glm::vec3(0.0, 1.0, 0.0));
+	ground = new Plane(glm::vec3(0,-25,0), 1000, glm::vec3(0.0, 1.0, 0.0));
 
 	cloth = new Cloth(glm::vec2(50,50), 1.0f, ground->transform.position.y+1.0f);
 
