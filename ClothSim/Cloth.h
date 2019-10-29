@@ -113,9 +113,8 @@ public:
 
 		//set size of cloth
 		size = _size;
-
 		//resize vectors to size
-		clothNodes.resize(size.y);
+		clothNodes.resize((unsigned int) size.y);
 
 		//Generate nodes
 		Console_OutputLog(L"Creating Cloth Nodes", LOGINFO);
@@ -157,7 +156,7 @@ public:
 		Console_OutputLog(L"Setting Static Cloth Nodes", LOGINFO);
 		for (size_t i = 0; i < size.x; i++)
 		{
-			clothNodes.at(size.y-1).at(i)->staticNode = true;
+			clothNodes.at(((unsigned int)size.y)-1).at(i)->staticNode = true;
 		}
 
 
@@ -270,7 +269,7 @@ public:
 		Console_OutputLog(L"Setting Static Cloth Nodes", LOGINFO);
 		for (size_t i = 0; i < size.x; i++)
 		{
-			clothNodes.at(size.y - 1).at(i)->staticNode = true;
+			clothNodes.at(((unsigned int)size.y) - 1).at(i)->staticNode = true;
 		}
 	}
 
