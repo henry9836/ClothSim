@@ -70,3 +70,26 @@ public:
 	Transform transform;
 	glm::vec3 color;
 };
+
+class Sphere {
+public:
+	Sphere();
+	Sphere(float _radius, glm::vec3 _color, glm::vec3 _position) {
+		radius = _radius;
+		color = _color;
+		transform.position = _position;
+	};
+	void Render() {
+		glPushMatrix();
+
+		glTranslatef(transform.position.x, transform.position.y, transform.position.z);
+
+		glColor3f(color.x, color.y, color.z);
+		glutSolidSphere(radius, 50, 50);
+
+		glPopMatrix();
+	};
+	Transform transform;
+	glm::vec3 color;
+	float radius = 1.0f;
+};
