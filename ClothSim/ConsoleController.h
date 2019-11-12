@@ -167,7 +167,7 @@ inline void Banner() {
 }
 
 inline void Console_Initalize() {
-	_setmode(_fileno(stdout), _O_U16TEXT);
+	int err = _setmode(_fileno(stdout), _O_U16TEXT);
 	srand((unsigned int)time(NULL));
 	Banner();
 }

@@ -7,6 +7,7 @@ float deltaTime = 0;
 float currentTime = 0;
 float pasttime = 0;
 float camAngle = 0;
+float camDistance = -60.0f;
 //Cloth effects
 
 float windAmp = 1.0f;
@@ -21,7 +22,7 @@ void Render() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	
-	glTranslatef(-10, -10, -100.0f);
+	glTranslatef(-10, -10, camDistance);
 	glRotatef(camAngle, 0, 1, 0);
 
 	ground->Render();
@@ -54,6 +55,7 @@ void Update() {
 void keyboardOther(int key, int x, int y) {
 	wcout << L"PRESSED: " << key << endl;
 
+	//Arrow Keys
 	if (key == 101) {
 		if (windDir.y < 1) {
 			windDir.y += 0.1f;
@@ -90,11 +92,12 @@ void keyboardInput(unsigned char key, int x, int y) {
 	}
 
 	if (key == 114 || key == 82) { //r (Reset)
-		gravity = false;
+		gravity = true;
 		wind = false;
 		glm::vec3 windDir = glm::vec3(0.0f, 0.5f, 0.5f);
 		windAmp = 1;
 		camAngle = 0;
+		camDistance = -60.0f;
 		cloth->Reset();
 	}
 
@@ -117,6 +120,13 @@ void keyboardInput(unsigned char key, int x, int y) {
 		camAngle += 1.0f;
 	}
 
+	if (key == 111 || key == 79) {//o get closer
+		camDistance += 1.0f;
+	}
+
+	if (key == 108 || key == 76) {//l get further
+		camDistance -= 1.0f;
+	}
 }
 
 void Resize(int w, int h) {
@@ -143,13 +153,13 @@ void InitializeOpenGL(int argc, char* argv[])
 
 	glutCreateWindow("CLOF");
 
-	glClearColor(0.5, 0.0, 0.0, 1.0);
+	glClearColor(0.3f, 0.3f, 0.5f, 1.0f);
 
 	glEnable(GL_DEPTH_TEST);
 
 	Console_OutputLog(L"Creating Objects...", LOGINFO);
 	
-	ground = new Plane(glm::vec3(0,-25,0), 1000, glm::vec3(0.0, 1.0, 0.0));
+	ground = new Plane(glm::vec3(0,-25,0), 1000, glm::vec3(0.3, 0.5, 0.3));
 
 	cloth = new Cloth(glm::vec2(50,50), 1.0f, ground->transform.position.y+1.0f);
 

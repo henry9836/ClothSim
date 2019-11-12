@@ -85,6 +85,8 @@ struct clothConstraint {
 public:
 	float stableDistance = 0.0f;
 	float currDistance = 0.0f;
+	float tearDistance = 10.0f;
+	bool torn = false;
 	clothNode* p1 = nullptr;
 	clothNode* p2 = nullptr;
 
@@ -92,14 +94,54 @@ public:
 		p1 = _p1;
 		p2 = _p2;
 		stableDistance = glm::length(glm::vec3(p2->position - p1->position));
+		tearDistance = stableDistance * 10.0f;
+	}
+
+	glm::vec4 FindStress() {
+
+		//white - red
+		//good  - extreme stress
+		//1.0f  - 0.0f
+		float stress = 1.0f;
+
+		//Find current distance between the points
+		glm::vec3 direction = p2->position - p1->position; //get direction from p2 to p1
+		currDistance = glm::length(direction); //get the distance between the points
+
+		//If we are torn
+		if ((currDistance > tearDistance) || torn) {
+			return glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+		}
+
+		//Find how much stress we are under
+		stress = ((currDistance / tearDistance)-1)*-1;
+
+		//Return a color
+		return glm::vec4(1.0f, stress, stress, 1.0f);
+
+	}
+
+	void Reset() {
+		stableDistance = glm::length(glm::vec3(p2->position - p1->position));
+		tearDistance = stableDistance * 10.0f;
+		torn = false;
 	}
 
 	void Tick(float deltaTime) {
+		//Tear constraint if we go beyond our tear distance
+		if (currDistance > tearDistance) {
+			torn = true;
+		}
+
 		glm::vec3 direction = p2->position - p1->position; //get direction from p2 to p1
 		currDistance = glm::length(direction); //get the distance between the points
 		glm::vec3 corrVec = (direction * (1 - stableDistance / currDistance)) * 0.5f; //find the vector to move the points towards each other if they are stretching
-		p1->moveBy(corrVec);
-		p2->moveBy(-corrVec);
+
+		//If the cloth is not torn
+		if (!torn) {
+			p1->moveBy(corrVec);
+			p2->moveBy(-corrVec);
+		}
 	}
 };
 
@@ -209,11 +251,16 @@ public:
 
 		calcNormals();
 
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		glBegin(GL_LINES);
 
 		//Color
-		glColor3f(1.0f, 1.0f, 1.0f);
+		//glColor3f(1.0f, 1.0f, 1.0f);
 		
+		int i = 0;
+
 		for (size_t y = 0; y < size.y - 1; y++)
 		{
 			for (size_t x = 0; x < size.x - 1; x++)
@@ -224,35 +271,114 @@ public:
 				//A---B
 				//| / |
 				//C---D
-				//A
-				glVertex3f(clothNodes.at(y).at(x)->position.x, clothNodes.at(y).at(x)->position.y, clothNodes.at(y).at(x)->position.z);
-				glm::vec3 normNormal = glm::normalize(clothNodes.at(y).at(x)->normal);
-				glNormal3f(normNormal.x, normNormal.y, normNormal.z);
-				//B
-				glVertex3f(clothNodes.at(y).at(x + 1)->position.x, clothNodes.at(y).at(x + 1)->position.y, clothNodes.at(y).at(x + 1)->position.z);
-				normNormal = glm::normalize(clothNodes.at(y).at(x + 1)->normal);
-				glNormal3f(normNormal.x, normNormal.y, normNormal.z);
-				//C
-				glVertex3f(clothNodes.at(y + 1).at(x)->position.x, clothNodes.at(y + 1).at(x)->position.y, clothNodes.at(y + 1).at(x)->position.z);
-				normNormal = glm::normalize(clothNodes.at(y + 1).at(x)->normal);
-				glNormal3f(normNormal.x, normNormal.y, normNormal.z);
 
-				//B
-				glVertex3f(clothNodes.at(y).at(x + 1)->position.x, clothNodes.at(y).at(x + 1)->position.y, clothNodes.at(y).at(x + 1)->position.z);
-				normNormal = glm::normalize(clothNodes.at(y).at(x + 1)->normal);
-				glNormal3f(normNormal.x, normNormal.y, normNormal.z);
-				//D
-				glVertex3f(clothNodes.at(y + 1).at(x + 1)->position.x, clothNodes.at(y + 1).at(x + 1)->position.y, clothNodes.at(y + 1).at(x + 1)->position.z);
-				normNormal = glm::normalize(clothNodes.at(y + 1).at(x + 1)->normal);
-				glNormal3f(normNormal.x, normNormal.y, normNormal.z);
-				//C
-				glVertex3f(clothNodes.at(y + 1).at(x)->position.x, clothNodes.at(y + 1).at(x)->position.y, clothNodes.at(y + 1).at(x)->position.z);
-				normNormal = glm::normalize(clothNodes.at(y + 1).at(x)->normal);
-				glNormal3f(normNormal.x, normNormal.y, normNormal.z);
+				//Color
+				glm::vec4 color = clothConstraints.at(i)->FindStress();
+				glColor4f(color.x, color.y, color.z, color.w);
+				i++;
 
+				//Don't Render if it is transparent
+				if (color.w > 0.5) {
+					//A
+					glVertex3f(clothNodes.at(y).at(x)->position.x, clothNodes.at(y).at(x)->position.y, clothNodes.at(y).at(x)->position.z);
+					glm::vec3 normNormal = glm::normalize(clothNodes.at(y).at(x)->normal);
+					glNormal3f(normNormal.x, normNormal.y, normNormal.z);
+					//B
+					glVertex3f(clothNodes.at(y).at(x + 1)->position.x, clothNodes.at(y).at(x + 1)->position.y, clothNodes.at(y).at(x + 1)->position.z);
+					normNormal = glm::normalize(clothNodes.at(y).at(x + 1)->normal);
+					glNormal3f(normNormal.x, normNormal.y, normNormal.z);
+				}
+
+
+				//Color
+				color = clothConstraints.at(i)->FindStress();
+				glColor4f(color.x, color.y, color.z, color.w);
+				i++;
+
+				if (color.w > 0.5) {
+					//C
+					glVertex3f(clothNodes.at(y + 1).at(x)->position.x, clothNodes.at(y + 1).at(x)->position.y, clothNodes.at(y + 1).at(x)->position.z);
+					glm::vec3 normNormal = glm::normalize(clothNodes.at(y + 1).at(x)->normal);
+					glNormal3f(normNormal.x, normNormal.y, normNormal.z);
+
+					//B
+					glVertex3f(clothNodes.at(y).at(x + 1)->position.x, clothNodes.at(y).at(x + 1)->position.y, clothNodes.at(y).at(x + 1)->position.z);
+					normNormal = glm::normalize(clothNodes.at(y).at(x + 1)->normal);
+					glNormal3f(normNormal.x, normNormal.y, normNormal.z);
+				}
+				//Color
+				color = clothConstraints.at(i)->FindStress();
+				glColor4f(color.x, color.y, color.z, color.w);
+				i++;
+
+				if (color.w > 0.5) {
+					//C
+					glVertex3f(clothNodes.at(y + 1).at(x)->position.x, clothNodes.at(y + 1).at(x)->position.y, clothNodes.at(y + 1).at(x)->position.z);
+					glm::vec3 normNormal = glm::normalize(clothNodes.at(y + 1).at(x)->normal);
+					glNormal3f(normNormal.x, normNormal.y, normNormal.z);
+
+					//A
+					glVertex3f(clothNodes.at(y).at(x)->position.x, clothNodes.at(y).at(x)->position.y, clothNodes.at(y).at(x)->position.z);
+					normNormal = glm::normalize(clothNodes.at(y).at(x)->normal);
+					glNormal3f(normNormal.x, normNormal.y, normNormal.z);
+				}
+
+				//Second Triangle
+
+				//Color
+				color = clothConstraints.at(i)->FindStress();
+				glColor4f(color.x, color.y, color.z, color.w);
+				i++;
+
+				if (color.w > 0.5) {
+					//B
+					glVertex3f(clothNodes.at(y).at(x + 1)->position.x, clothNodes.at(y).at(x + 1)->position.y, clothNodes.at(y).at(x + 1)->position.z);
+					glm::vec3 normNormal = glm::normalize(clothNodes.at(y).at(x + 1)->normal);
+					glNormal3f(normNormal.x, normNormal.y, normNormal.z);
+
+					//D
+					glVertex3f(clothNodes.at(y + 1).at(x + 1)->position.x, clothNodes.at(y + 1).at(x + 1)->position.y, clothNodes.at(y + 1).at(x + 1)->position.z);
+					normNormal = glm::normalize(clothNodes.at(y + 1).at(x + 1)->normal);
+					glNormal3f(normNormal.x, normNormal.y, normNormal.z);
+				}
+
+				//Color
+				color = clothConstraints.at(i)->FindStress();
+				glColor4f(color.x, color.y, color.z, color.w);
+				i++;
+
+				if (color.w > 0.5) {
+					//D
+					glVertex3f(clothNodes.at(y + 1).at(x + 1)->position.x, clothNodes.at(y + 1).at(x + 1)->position.y, clothNodes.at(y + 1).at(x + 1)->position.z);
+					glm::vec3 normNormal = glm::normalize(clothNodes.at(y + 1).at(x + 1)->normal);
+					glNormal3f(normNormal.x, normNormal.y, normNormal.z);
+
+					//C
+					glVertex3f(clothNodes.at(y + 1).at(x)->position.x, clothNodes.at(y + 1).at(x)->position.y, clothNodes.at(y + 1).at(x)->position.z);
+					normNormal = glm::normalize(clothNodes.at(y + 1).at(x)->normal);
+					glNormal3f(normNormal.x, normNormal.y, normNormal.z);
+				}
+
+				//Color
+				color = clothConstraints.at(i)->FindStress();
+				glColor4f(color.x, color.y, color.z, color.w);
+				i++;
+
+				if (color.w > 0.5) {
+					//C
+					glVertex3f(clothNodes.at(y + 1).at(x)->position.x, clothNodes.at(y + 1).at(x)->position.y, clothNodes.at(y + 1).at(x)->position.z);
+					glm::vec3 normNormal = glm::normalize(clothNodes.at(y + 1).at(x)->normal);
+					glNormal3f(normNormal.x, normNormal.y, normNormal.z);
+
+					//B
+					glVertex3f(clothNodes.at(y).at(x + 1)->position.x, clothNodes.at(y).at(x + 1)->position.y, clothNodes.at(y).at(x + 1)->position.z);
+					normNormal = glm::normalize(clothNodes.at(y).at(x + 1)->normal);
+					glNormal3f(normNormal.x, normNormal.y, normNormal.z);
+				}
 			}
 		}
 
+		//glDisable(GL_BLEND);
 
 		glEnd();
 	}
@@ -265,6 +391,12 @@ public:
 				clothNodes.at(y).at(x)->Reset();
 			}
 		}
+
+		for (size_t i = 0; i < clothConstraints.size(); i++)
+		{
+			clothConstraints.at(i)->Reset();
+		}
+
 		//Static Nodes
 		Console_OutputLog(L"Setting Static Cloth Nodes", LOGINFO);
 		for (size_t i = 0; i < size.x; i++)
