@@ -10,6 +10,7 @@
 #include FT_FREETYPE_H
 
 #include "ConsoleController.h"
+#include "Util.h"
 
 const glm::vec3 zVector = glm::vec3(0, 0, 0);
 
@@ -97,6 +98,11 @@ public:
 		tearDistance = stableDistance * 10.0f;
 	}
 
+	~clothConstraint() {
+		delete p1;
+		delete p2;
+	}
+
 	glm::vec4 FindStress() {
 
 		//white - red
@@ -147,7 +153,11 @@ public:
 
 class Cloth {
 public:
-	Cloth(glm::vec2 _size, float scaleFactor, float _gL) {
+	~Cloth() {
+
+	}
+
+	Cloth(glm::vec2 _size, float _scaleFactor, float _gL) {
 
 		Console_OutputLog(to_wstring("Creating Cloth Object Of Size: " + to_string(_size.x) + ":" + to_string(_size.y)), LOGINFO);
 		
@@ -155,6 +165,7 @@ public:
 
 		//set size of cloth
 		size = _size;
+		this->scaleFactor = _scaleFactor;
 		//resize vectors to size
 		clothNodes.resize((unsigned int) size.y);
 
@@ -411,11 +422,13 @@ public:
 			clothConstraints.at(i)->Tick(deltaTime);
 		}
 
-		for (size_t y = 0; y < size.y; y++)
-		{
-			for (size_t x = 0; x < size.x; x++)
+		if (clothNodes.size() > 0) {
+			for (size_t y = 0; y < size.y; y++)
 			{
-				clothNodes.at(y).at(x)->Tick(deltaTime, groundLevel);
+				for (size_t x = 0; x < size.x; x++)
+				{
+					clothNodes.at(y).at(x)->Tick(deltaTime, groundLevel);
+				}
 			}
 		}
 	}
@@ -448,11 +461,13 @@ public:
 	}
 
 	void globalForce(glm::vec3 dir) {
-		for (size_t y = 0; y < size.y; y++)
-		{
-			for (size_t x = 0; x < size.x; x++)
+		if (clothNodes.size() > 0) {
+			for (size_t y = 0; y < size.y; y++)
 			{
-				clothNodes.at(y).at(x)->addForce(dir, groundLevel);
+				for (size_t x = 0; x < size.x; x++)
+				{
+					clothNodes.at(y).at(x)->addForce(dir, groundLevel);
+				}
 			}
 		}
 	}
@@ -461,5 +476,6 @@ public:
 	vector<vector<clothNode*>> clothNodes;
 	vector<clothConstraint*> clothConstraints;
 	float groundLevel = 0;
+	float scaleFactor = 10;
 
 };

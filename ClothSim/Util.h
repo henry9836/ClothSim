@@ -1,0 +1,8 @@
+#pragma once
+
+enum CONTROLS {
+	SIZEUPX,
+	SIZEUPY,
+	SIZEDOWNX,
+	SIZEDOWNY
+};

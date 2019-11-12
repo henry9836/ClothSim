@@ -2,6 +2,9 @@
 
 Cloth* cloth;
 Plane* ground;
+Sphere* sphere;
+
+glm::vec2 clothSize = glm::vec2(50, 50);
 
 float deltaTime = 0;
 float currentTime = 0;
@@ -27,6 +30,7 @@ void Render() {
 
 	ground->Render();
 	cloth->Render();
+	sphere->Render();
 
 	glutSwapBuffers();
 }
@@ -127,6 +131,37 @@ void keyboardInput(unsigned char key, int x, int y) {
 	if (key == 108 || key == 76) {//l get further
 		camDistance -= 1.0f;
 	}
+
+	//Cloth resizing
+
+	if (key == 121 || key == 89) //y get x smaller
+	{
+		delete cloth;
+		if (clothSize.x > 2) {
+			clothSize.x -= 1;
+		}
+		cloth = new Cloth(clothSize, 1.0f, ground->transform.position.y + 1.0f);
+	}
+	if (key == 117 || key == 85) //u get x bigger
+	{
+		delete cloth;
+		clothSize.x += 1;
+		cloth = new Cloth(clothSize, 1.0f, ground->transform.position.y + 1.0f);
+	}
+	if (key == 72 || key == 104) //h get y smaller
+	{
+		delete cloth;
+		if (clothSize.y > 2) {
+			clothSize.y -= 1;
+		}
+		cloth = new Cloth(clothSize, 1.0f, ground->transform.position.y + 1.0f);
+	}
+	if (key == 106 || key == 74) //j get y bigger
+	{
+		delete cloth;
+		clothSize.y += 1;
+		cloth = new Cloth(clothSize, 1.0f, ground->transform.position.y + 1.0f);
+	}
 }
 
 void Resize(int w, int h) {
@@ -161,7 +196,9 @@ void InitializeOpenGL(int argc, char* argv[])
 	
 	ground = new Plane(glm::vec3(0,-25,0), 1000, glm::vec3(0.3, 0.5, 0.3));
 
-	cloth = new Cloth(glm::vec2(50,50), 1.0f, ground->transform.position.y+1.0f);
+	cloth = new Cloth(clothSize, 1.0f, ground->transform.position.y+1.0f);
+
+	sphere = new Sphere(25.0f, glm::vec3(0.25, 0.45, 0.25), glm::vec3(0,-30,0));
 
 	glutDisplayFunc(Render);
 	glutIdleFunc(Update);
