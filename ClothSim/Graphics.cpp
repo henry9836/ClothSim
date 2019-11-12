@@ -5,6 +5,9 @@ Plane* ground;
 Sphere* sphere;
 
 glm::vec2 clothSize = glm::vec2(50, 50);
+glm::vec2 windowSize = glm::vec2(1280, 720);
+glm::vec2 mousePos = glm::vec2(0, 0);
+glm::vec3 rayDirection = glm::vec3(1, 0, 0);
 
 float deltaTime = 0;
 float currentTime = 0;
@@ -17,6 +20,7 @@ float windAmp = 1.0f;
 
 bool gravity = true;
 bool wind = false;
+bool mouseDown = false;
 
 glm::vec3 windDir = glm::vec3(0.0f, 0.5f, 0.5f);
 
@@ -24,7 +28,7 @@ glm::vec3 windDir = glm::vec3(0.0f, 0.5f, 0.5f);
 void Render() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-	
+
 	glTranslatef(-10, -10, camDistance);
 	glRotatef(camAngle, 0, 1, 0);
 
@@ -49,6 +53,9 @@ void Update() {
 	if (wind) {
 		cloth->ApplyWind(windDir, windAmp);
 	}
+
+	cloth->CollisionLogic(sphere, rayDirection, glm::vec3(-10, -10, camDistance), mouseDown);
+
 	//Object Ticks
 
 	cloth->Tick(deltaTime);
@@ -162,6 +169,17 @@ void keyboardInput(unsigned char key, int x, int y) {
 		clothSize.y += 1;
 		cloth = new Cloth(clothSize, 1.0f, ground->transform.position.y + 1.0f);
 	}
+
+	//Damping
+
+	if (key == 86 || key == 118) //v less damping
+	{
+		cloth->AdjustDamping(-0.01f);
+	}
+	if (key == 66 || key == 98) //b more damping
+	{
+		cloth->AdjustDamping(0.01f);
+	}
 }
 
 void Resize(int w, int h) {
@@ -173,7 +191,51 @@ void Resize(int w, int h) {
 	else
 		gluPerspective(80, (float)w / (float)h, 1.0, 5000.0);
 	glMatrixMode(GL_MODELVIEW);
+	windowSize.x = (float)w;
+	windowSize.y = (float)h;
 	glLoadIdentity();
+}
+
+void Raycast() {
+	glm::vec2 NormMousePos = glm::vec2((2.0f * mousePos.x) / (float)windowSize.x - 1.0f, 1.0f - (2.0f * mousePos.y) / (float)windowSize.y);
+	
+	glm::vec2 normalizedScreenPos = NormMousePos;
+
+	glm::vec4 clipCoords = glm::vec4(normalizedScreenPos.x, normalizedScreenPos.y, -1.0f, 1.0f);
+
+	glm::mat4 projMat = glm::perspective(80.0f, (float)(windowSize.x / windowSize.y), 0.1f, 5000.0f);
+	glm::mat4 viewMat = glm::lookAt(glm::vec3(-10.0f, -10.0f, camDistance), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+
+	glm::mat4 invProjMat = glm::inverse(projMat);
+
+	glm::vec4 eyeCoords = invProjMat * clipCoords;
+
+	eyeCoords = glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
+
+	glm::mat4 invViewMat = glm::inverse(viewMat);
+
+	glm::vec4 rayWorld = invViewMat * eyeCoords;
+
+	rayDirection = glm::normalize((glm::vec3(rayWorld)));
+
+}
+
+void MouseAction(int button, int state, int x, int y) {
+	mousePos = glm::vec2(x, y);
+
+	if (button == 0) {
+		mouseDown = true;
+	}
+	else{
+		mouseDown = false;
+	}
+	Raycast();
+}
+
+
+void MouseMovement(int x, int y) {
+	mousePos = glm::vec2(x, y);
+	Raycast();
 }
 
 void InitializeOpenGL(int argc, char* argv[])
@@ -203,6 +265,8 @@ void InitializeOpenGL(int argc, char* argv[])
 	glutDisplayFunc(Render);
 	glutIdleFunc(Update);
 	glutReshapeFunc(Resize);
+	glutMotionFunc(MouseMovement);
+	glutMouseFunc(MouseAction);
 	glutKeyboardFunc(keyboardInput);
 	glutSpecialFunc(keyboardOther);
 

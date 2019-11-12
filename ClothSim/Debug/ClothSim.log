@@ -1,2 +1,16 @@
 ﻿  Graphics.cpp
+D:\Projects\ClothSim\ClothSim\Graphics.cpp(177,29): warning C4305:  'argument': truncation from 'double' to 'float'
+D:\Projects\ClothSim\ClothSim\Graphics.cpp(181,28): warning C4305:  'argument': truncation from 'double' to 'float'
+D:\Projects\ClothSim\ClothSim\Graphics.cpp(194,17): warning C4244:  '=': conversion from 'int' to 'T', possible loss of data
+D:\Projects\ClothSim\ClothSim\Graphics.cpp(194,17): warning C4244:         with
+D:\Projects\ClothSim\ClothSim\Graphics.cpp(194,17): warning C4244:         [
+D:\Projects\ClothSim\ClothSim\Graphics.cpp(194,17): warning C4244:             T=float
+D:\Projects\ClothSim\ClothSim\Graphics.cpp(194,17): warning C4244:         ]
+  main.cpp
+  Generating Code...
+D:\Projects\ClothSim\ClothSim\Graphics.cpp(195,17): warning C4244:  '=': conversion from 'int' to 'T', possible loss of data
+D:\Projects\ClothSim\ClothSim\Graphics.cpp(195,17): warning C4244:         with
+D:\Projects\ClothSim\ClothSim\Graphics.cpp(195,17): warning C4244:         [
+D:\Projects\ClothSim\ClothSim\Graphics.cpp(195,17): warning C4244:             T=float
+D:\Projects\ClothSim\ClothSim\Graphics.cpp(195,17): warning C4244:         ]
   ClothSim.vcxproj -> D:\Projects\ClothSim\Debug\ClothSim.exe

@@ -11,16 +11,17 @@
 
 #include "ConsoleController.h"
 #include "Util.h"
+#include "SimpleObjects.h"
 
 const glm::vec3 zVector = glm::vec3(0, 0, 0);
 
 struct clothNode {
 protected:
-	const float damping = 0.01f;
 	const float phyStep = 0.25f;
 public:
 	bool staticNode = false;
 	float mass = 10.0f;
+	float damping = 0.01f;
 	glm::vec3 spawnPos = glm::vec3(0, 0, 0);
 	glm::vec3 position = glm::vec3(0, 0, 0);
 	glm::vec3 oldPosition = glm::vec3(0, 0, 0);
@@ -38,6 +39,7 @@ public:
 		position = spawnPos;
 		oldPosition = spawnPos;
 		acceleration = zVector;
+		damping = 0.01f;
 	}
 
 	void addForce(glm::vec3 force, float groundLevel)
@@ -95,7 +97,7 @@ public:
 		p1 = _p1;
 		p2 = _p2;
 		stableDistance = glm::length(glm::vec3(p2->position - p1->position));
-		tearDistance = stableDistance * 10.0f;
+		tearDistance = stableDistance * 7.0f;
 	}
 
 	~clothConstraint() {
@@ -433,6 +435,86 @@ public:
 		}
 	}
 
+	void AdjustDamping(float amount) {
+		for (size_t y = 0; y < clothNodes.size(); y++)
+		{
+			for (size_t x = 0; x < clothNodes.at(0).size(); x++)
+			{
+				clothNodes.at(y).at(x)->damping += amount;
+			}
+		}
+	}
+
+	void CollisionLogic(Sphere* sphere, glm::vec3 rayDir, glm::vec3 camPos, bool mouseDown) {
+		//Check if a node in inside a sphere
+		for (size_t y = 0; y < clothNodes.size(); y++)
+		{
+			for (size_t x = 0; x < clothNodes.at(0).size(); x++)
+			{
+				//If we are in a sphere
+				if (glm::distance(sphere->transform.position, clothNodes.at(y).at(x)->position) < sphere->radius) {
+					//Push out of sphere
+
+					glm::vec3 directionVec = clothNodes.at(y).at(x)->position - sphere->transform.position;
+
+					directionVec = glm::normalize(directionVec);
+
+					//clothNodes.at(y).at(x)->moveBy(directionVec - (sphere->radius - 10)); //black hole
+					
+					clothNodes.at(y).at(x)->moveBy(directionVec);
+				}
+			}
+		}
+
+		if (mouseDown) {
+			//If we are holding mouse down
+			for (size_t y = 0; y < clothNodes.size(); y++)
+			{
+				for (size_t x = 0; x < clothNodes.at(0).size(); x++)
+				{
+					//If the ray hit our node
+					float Scale = 0.1f;
+
+					glm::vec3 dirfrac;
+
+					// r.dir is unit direction vector of ray
+					dirfrac.x = 1.0f / rayDir.x;
+					dirfrac.y = 1.0f / rayDir.y;
+					dirfrac.z = 1.0f / rayDir.z;
+					// lb is the corner of AABB with minimal coordinates - left bottom, rt is maximal corner
+					// r.org is origin of ray
+					float t1 = ((clothNodes.at(y).at(x)->position.x - Scale) - camPos.x) * dirfrac.x;
+					float t2 = ((clothNodes.at(y).at(x)->position.x + Scale) - camPos.x) * dirfrac.x;
+					float t3 = ((clothNodes.at(y).at(x)->position.y - Scale) - camPos.y) * dirfrac.y;
+					float t4 = ((clothNodes.at(y).at(x)->position.y + Scale) - camPos.y) * dirfrac.y;
+					float t5 = ((clothNodes.at(y).at(x)->position.z) - camPos.z) * dirfrac.z;
+					float t6 = ((clothNodes.at(y).at(x)->position.z) - camPos.z) * dirfrac.z;
+
+					float tmin = fmax(fmax(fmin(t1, t2), fmin(t3, t4)), fmin(t5, t6));
+					float tmax = fmin(fmin(fmax(t1, t2), fmax(t3, t4)), fmax(t5, t6));
+
+					// if tmax < 0, ray (line) is intersecting AABB, but the whole AABB is behind us
+					if (tmax < 0)
+					{
+						//Console_OutputLog(L"BEHIND", LOGINFO);
+						clothNodes.at(y).at(x)->addForce(-rayDir * 15.0f, groundLevel);
+					}
+					// if tmin > tmax, ray doesn't intersect AABB
+					else if (tmin > tmax)
+					{
+						//Console_OutputLog(L"MISSED", LOGINFO);
+					}
+					else {
+						//Apply Force
+						Console_OutputLog(L"HIT", LOGINFO);
+						clothNodes.at(y).at(x)->addForce(-rayDir * 15.0f, groundLevel);
+					}
+				}
+			}
+		}
+
+	}
+	
 	void ApplyWind(glm::vec3 windDir, float amp) {
 		for (size_t y = 0; y < size.y-1; y++)
 		{
