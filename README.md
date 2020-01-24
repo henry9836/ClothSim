@@ -1,11 +1,11 @@
 # ClothSim
-~ Henry Oliver
+#### Henry Oliver
 
-~ Vaughan Webb
+#### Vaughan Webb
 
--= [ Controls ] =-
+### -= [ Controls ] =-
 
--= Simulation Controls =-
+##### -= Simulation Controls =-
 
 Esc - Quit
 
@@ -26,13 +26,13 @@ H/J - Modify Cloth Size Y
 V/B - Modify Cloth Damping
 
 
--= Mouse Control =-
+##### -= Mouse Control =-
 
 Left Click - Enable Push
 
 Right Click - Disable Push
 
--= Wind Control =- 
+##### -= Wind Control =- 
 
 \ - Increase Wind 
 
