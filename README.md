@@ -3,6 +3,8 @@
 
 #### Vaughan Webb
 
+Cloth simulation built in OpenGL
+
 ### -= [ Controls ] =-
 
 ##### -= Simulation Controls =-
