@@ -11,6 +11,8 @@ Esc - Quit
 
 R - Reset
 
+D - Deattach Cloth
+
 G - Toggle Gravity
 
 W - Toggle Wind
