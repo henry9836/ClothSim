@@ -1,7 +1,5 @@
 # ClothSim
-#### Henry Oliver
-
-#### Vaughan Webb
+##### Built by Henry Oliver and Vaughan Webb
 
 Cloth simulation built in OpenGL
 
