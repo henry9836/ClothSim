@@ -1,4 +1,5 @@
 # ClothSim
+![gif](https://github.com/henry9836/ClothSim/blob/master/docs/gif.gif)
 ##### Built by Henry Oliver and Vaughan Webb
 
 Cloth simulation built in OpenGL
